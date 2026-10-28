@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 
 import 'course_state.dart';
+import 'models/course.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
 const String studentId = '2455011005';
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
 // TAHAP 4: VALUENOTIFIER
 // TAHAP 6: PROVIDER
 // TAHAP 7: WATCH, READ, CONSUMER
+// TAHAP 8: MODEL COURSE
 // =====================================================
 
 class DashboardPage extends StatefulWidget {
@@ -205,10 +207,12 @@ class _DashboardPageState extends State<DashboardPage> {
               data['student'] as Map,
             );
 
+            // Tahap 8:
+            // Mengubah setiap data JSON menjadi objek Course.
             final courses = (data['courses'] as List)
                 .map(
-                  (course) => Map<String, dynamic>.from(
-                    course as Map,
+                  (courseJson) => Course.fromJson(
+                    Map<String, dynamic>.from(courseJson as Map),
                   ),
                 )
                 .toList();
@@ -266,11 +270,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildHomePage({
     required Map<String, dynamic> student,
-    required List<Map<String, dynamic>> courses,
+    required List<Course> courses,
   }) {
     final totalCredits = courses.fold<int>(
       0,
-      (sum, course) => sum + (course['credits'] as int? ?? 0),
+      (sum, course) => sum + course.credits,
     );
 
     return SingleChildScrollView(
@@ -438,15 +442,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
                   final course = courses[index];
-                  final code = course['code']?.toString() ?? '-';
 
-                  // Tahap 7: watch mendengarkan perubahan state.
                   final isFavorite = context
                       .watch<CourseState>()
-                      .isFavorite(code);
+                      .isFavorite(course.code);
 
                   return CourseCard(
-                    key: ValueKey('home_$code'),
+                    key: ValueKey('home_${course.code}'),
                     course: course,
                     isFavorite: isFavorite,
                   );
@@ -480,7 +482,7 @@ class _DashboardPageState extends State<DashboardPage> {
   // =====================================================
 
   Widget _buildCoursesPage({
-    required List<Map<String, dynamic>> courses,
+    required List<Course> courses,
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -531,15 +533,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
                   final course = courses[index];
-                  final code = course['code']?.toString() ?? '-';
 
-                  // watch membuat ikon favorit ikut diperbarui.
                   final isFavorite = context
                       .watch<CourseState>()
-                      .isFavorite(code);
+                      .isFavorite(course.code);
 
                   return CourseCard(
-                    key: ValueKey('courses_$code'),
+                    key: ValueKey('courses_${course.code}'),
                     course: course,
                     isFavorite: isFavorite,
                   );
@@ -773,10 +773,11 @@ class SummaryCard extends StatelessWidget {
 // =====================================================
 // COURSE CARD
 // Tahap 7: read digunakan untuk menjalankan aksi.
+// Tahap 8: data menggunakan model Course.
 // =====================================================
 
 class CourseCard extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   final bool isFavorite;
 
   const CourseCard({
@@ -787,10 +788,10 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = course['title']?.toString() ?? '-';
-    final code = course['code']?.toString() ?? '-';
-    final credits = course['credits']?.toString() ?? '0';
-    final status = course['status']?.toString() ?? 'planned';
+    final title = course.title;
+    final code = course.code;
+    final credits = course.credits;
+    final status = course.status;
 
     IconData statusIcon;
     Color statusColor;
@@ -827,7 +828,6 @@ class CourseCard extends StatelessWidget {
           if (!context.mounted) return;
 
           if (result == true) {
-            // read menjalankan aksi tanpa berlangganan state.
             context.read<CourseState>().addFavorite(code);
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -884,7 +884,6 @@ class CourseCard extends StatelessWidget {
                 onPressed: () {
                   final wasFavorite = isFavorite;
 
-                  // read hanya dipanggil ketika tombol ditekan.
                   context.read<CourseState>().toggleFavorite(code);
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -917,10 +916,11 @@ class CourseCard extends StatelessWidget {
 
 // =====================================================
 // COURSE DETAIL PAGE
+// Tahap 8: menerima objek Course, bukan Map.
 // =====================================================
 
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
 
   const CourseDetailPage({
     super.key,
@@ -929,16 +929,11 @@ class CourseDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = course['title']?.toString() ?? '-';
-    final code = course['code']?.toString() ?? '-';
-    final credits = course['credits']?.toString() ?? '0';
-    final status = course['status']?.toString() ?? 'planned';
-
     String statusText;
 
-    if (status == 'done') {
+    if (course.status == 'done') {
       statusText = 'Selesai';
-    } else if (status == 'active') {
+    } else if (course.status == 'active') {
       statusText = 'Aktif';
     } else {
       statusText = 'Rencana';
@@ -979,16 +974,22 @@ class CourseDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      course.title,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text('Kode: $code', style: const TextStyle(fontSize: 16)),
+                    Text(
+                      'Kode: ${course.code}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     const SizedBox(height: 8),
-                    Text('SKS: $credits', style: const TextStyle(fontSize: 16)),
+                    Text(
+                      'SKS: ${course.credits}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Status: $statusText',
