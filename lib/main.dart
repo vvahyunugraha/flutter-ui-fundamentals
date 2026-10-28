@@ -16,7 +16,7 @@ Future<Map<String, dynamic>> loadStudentData() async {
 }
 
 // =====================================================
-// TAHAP 5 - GRIDVIEW RESPONSIF
+// GRIDVIEW RESPONSIF
 // =====================================================
 
 int columnsFor(double width) {
@@ -53,7 +53,9 @@ class MyApp extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 10, 11, DAN 2 - DASHBOARD
+// DASHBOARD
+// TAHAP 3: LIFTING STATE UP
+// SINGLE SOURCE OF TRUTH
 // =====================================================
 
 class DashboardPage extends StatefulWidget {
@@ -68,7 +70,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   int currentIndex = 0;
 
-  // TAHAP 2: State favorite dikelola oleh parent.
+  // Satu sumber data favorit untuk Home dan Courses.
   final Set<String> favorites = <String>{};
 
   @override
@@ -77,7 +79,7 @@ class _DashboardPageState extends State<DashboardPage> {
     studentFuture = loadStudentData();
   }
 
-  // Menambah atau menghapus favorite.
+  // Parent mengubah state favorit.
   void toggleFavorite(String code) {
     setState(() {
       if (favorites.contains(code)) {
@@ -88,7 +90,7 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  // Menambahkan favorite tanpa menghapus yang sudah ada.
+  // Dipanggil ketika pengguna memilih favorite dari halaman detail.
   void addFavorite(String code) {
     if (favorites.contains(code)) return;
 
@@ -98,7 +100,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ===================================================
-  // TAHAP 11: NAVIGATION BAR
+  // NAVIGATION BAR
   // ===================================================
 
   Widget buildNavigationBar() {
@@ -127,7 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ===================================================
-  // TAHAP 11: NAVIGATION RAIL
+  // NAVIGATION RAIL
   // ===================================================
 
   Widget buildNavigationRail() {
@@ -154,6 +156,10 @@ class _DashboardPageState extends State<DashboardPage> {
       ],
     );
   }
+
+  // ===================================================
+  // BUILD DASHBOARD
+  // ===================================================
 
   @override
   Widget build(BuildContext context) {
@@ -349,8 +355,14 @@ class _DashboardPageState extends State<DashboardPage> {
                   return CourseCard(
                     key: ValueKey('home_$code'),
                     course: course,
+
+                    // Parent mengirimkan state ke child.
                     isFavorite: favorites.contains(code),
+
+                    // Child meminta parent mengubah state.
                     onFavoriteToggle: () => toggleFavorite(code),
+
+                    // Hasil pemilihan dari halaman detail.
                     onFavoriteSelected: () => addFavorite(code),
                   );
                 },
@@ -398,7 +410,9 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text('Lihat detail dan tandai mata kuliah favorit.'),
+          const Text(
+            'Lihat detail dan tandai mata kuliah favorit.',
+          ),
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -420,6 +434,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   return CourseCard(
                     key: ValueKey('courses_$code'),
                     course: course,
+
+                    // Menggunakan state favorit yang sama dengan Home.
                     isFavorite: favorites.contains(code),
                     onFavoriteToggle: () => toggleFavorite(code),
                     onFavoriteSelected: () => addFavorite(code),
@@ -656,8 +672,9 @@ class SummaryCard extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 2 - COURSE CARD
-// State favorite tidak disimpan di widget ini.
+// COURSE CARD
+// Child menerima state dan callback dari parent.
+// Tidak memiliki state favorit sendiri.
 // =====================================================
 
 class CourseCard extends StatelessWidget {
@@ -772,6 +789,7 @@ class CourseCard extends StatelessWidget {
                 onPressed: () {
                   final wasFavorite = isFavorite;
 
+                  // Child meminta parent mengubah state.
                   onFavoriteToggle();
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -803,7 +821,7 @@ class CourseCard extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 8 & 9 - COURSE DETAIL PAGE
+// COURSE DETAIL PAGE
 // =====================================================
 
 class CourseDetailPage extends StatelessWidget {
@@ -931,7 +949,7 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 6, 13, DAN 14 - PROFILE / FORM
+// PROFILE FORM
 // =====================================================
 
 class ProfileFormPage extends StatefulWidget {
@@ -993,8 +1011,6 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     return null;
   }
 
-  // TAHAP 14 - DIALOG KONFIRMASI
-
   Future<bool> showSaveConfirmation() async {
     final result = await showDialog<bool>(
       context: context,
@@ -1024,8 +1040,6 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
     return result ?? false;
   }
-
-  // TAHAP 14 - LOADING
 
   Future<void> processSave() async {
     setState(() {
