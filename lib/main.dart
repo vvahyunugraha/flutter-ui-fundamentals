@@ -256,222 +256,26 @@ class _DashboardPageState extends State<DashboardPage> {
   }) {
     final totalCredits = courses.fold<int>(
       0,
-      (sum, course) =>
-          sum + (course['credits'] as int? ?? 0),
+      (sum, course) => sum + (course['credits'] as int? ?? 0),
     );
-
-    final size = MediaQuery.of(context).size;
-    final orientation =
-        MediaQuery.of(context).orientation;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProfileCard(
-            student: student,
-          ),
-
+          ProfileCard(student: student),
           const SizedBox(height: 20),
-
-          // =================================================
-          // TAHAP 1
-          // =================================================
-
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding:
-                      const EdgeInsets.all(16),
-                  color: Colors.blue.shade100,
-                  child: const Text(
-                    '$studentId - $studentName',
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // TAHAP 2
-          // =================================================
-
-          Text(
-            'Width: '
-            '${size.width.toStringAsFixed(0)}',
-          ),
-
-          Text(
-            'Height: '
-            '${size.height.toStringAsFixed(0)}',
-          ),
-
-          Text(
-            'Orientation: $orientation',
-          ),
-
-          Text(
-            'Nama: $studentName',
-          ),
-
-          Text(
-            'NIM: $studentId',
-          ),
-
-          Text(
-            size.width < 600
-                ? 'Compact'
-                : 'Wide',
-          ),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // TAHAP 3
-          // =================================================
-
-          const Text(
-            'Tahap 3 - Layout Responsif',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 600) {
-                return const CompactLayout();
-              } else if (constraints.maxWidth < 840) {
-                return const MediumLayout();
-              } else {
-                return const ExpandedLayout();
-              }
-            },
-          ),
-
-          const SizedBox(height: 20),
-
-          const GreetingCard(),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // TAHAP 4
-          // =================================================
-
-          const Text(
-            'Tahap 4 - Expanded, Flexible, dan Wrap',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: PanelBox(
-                  title: 'Panel A',
-                  description: 'Flex 2',
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                flex: 1,
-                child: PanelBox(
-                  title: 'Panel B',
-                  description: 'Flex 1',
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          const Text(
-            'Skill',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              Chip(
-                label: Text('Flutter'),
-              ),
-              Chip(
-                label: Text('Dart'),
-              ),
-              Chip(
-                label: Text('Laravel'),
-              ),
-              Chip(
-                label: Text('React'),
-              ),
-              Chip(
-                label: Text('Figma'),
-              ),
-              Chip(
-                label: Text('UI/UX'),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Perbandingan Row dan Wrap',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Wrap akan memindahkan item ke baris '
-            'berikutnya ketika ruang tidak cukup.',
-          ),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // RINGKASAN
-          // =================================================
-
           const Text(
             'Ringkasan Pembelajaran',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-
-          const SizedBox(height: 10),
-
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: SummaryCard(
-                  title: 'Total Mata Kuliah',
+                  title: 'Mata Kuliah',
                   value: courses.length.toString(),
                   icon: Icons.menu_book,
                   color: Colors.blue,
@@ -488,458 +292,51 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ),
-
           const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 5
-          // =================================================
-
-          const Text(
-            'Tahap 5 - GridView Responsif',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Mata Kuliah',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () => setState(() => currentIndex = 1),
+                child: const Text('Lihat semua'),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 10),
-
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
               return GridView.builder(
                 shrinkWrap: true,
-                physics:
-                    const NeverScrollableScrollPhysics(),
-                gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount:
-                      columnsFor(
-                    constraints.maxWidth,
-                  ),
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columnsFor(constraints.maxWidth),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
+                  childAspectRatio: constraints.maxWidth < 600 ? 1.55 : 1.35,
                 ),
                 itemCount: courses.length,
-                itemBuilder:
-                    (context, index) =>
-                        CourseCard(
-                  course: courses[index],
-                ),
+                itemBuilder: (context, index) => CourseCard(course: courses[index]),
               );
             },
           ),
-
           const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 6
-          // =================================================
-
-          const Text(
-            'Tahap 6 - Scrollable Content',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Menguji halaman profil dan form '
-            'yang lebih tinggi dari layar.',
-          ),
-
-          const SizedBox(height: 12),
-
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const ProfileFormPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const ProfileFormPage()),
                 );
               },
-              icon: const Icon(Icons.edit),
-              label: const Text(
-                'Buka Form Tahap 6',
-              ),
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Edit Profil'),
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 7
-          // =================================================
-
-          const Text(
-            'Tahap 7 - Navigation Dasar',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Menguji Navigator.push() dan Navigator.pop().',
-          ),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const HomePage(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.navigation),
-              label: const Text(
-                'Buka Home Page',
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 8
-          // =================================================
-
-          const Text(
-            'Tahap 8 - Passing Data',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Tekan salah satu course untuk membuka '
-            'detail dan melihat data yang dikirim.',
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 9
-          // =================================================
-
-          const Text(
-            'Tahap 9 - Returning Data',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Pilih course pada detail untuk mengirim '
-            'hasil kembali ke halaman sebelumnya.',
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 10
-          // =================================================
-
-          const Text(
-            'Tahap 10 - NavigationBar',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Gunakan navigasi utama untuk berpindah '
-            'antara Home, Courses, dan Profile.',
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 11
-          // =================================================
-
-          const Text(
-            'Tahap 11 - Adaptive Navigation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'NavigationBar digunakan pada layar '
-            'compact/medium dan NavigationRail '
-            'digunakan pada layar expanded.',
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 12
-          // =================================================
-
-          const Text(
-            'Tahap 12 - Interaction',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Tap course untuk membuka detail, '
-            'gunakan icon favorite untuk mengubah '
-            'status favorite, dan tekan lama course '
-            'untuk melihat informasi.',
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 13
-          // =================================================
-
-          const Text(
-            'Tahap 13 - Form & Validation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Form profil menggunakan validasi '
-            'untuk memastikan data yang dimasukkan '
-            'sudah sesuai.',
-          ),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const ProfileFormPage(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.assignment),
-              label: const Text(
-                'Buka Form Tahap 13',
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // =================================================
-          // TAHAP 14
-          // =================================================
-
-          const Text(
-            'Tahap 14 - Feedback',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Menggunakan SnackBar, Dialog, dan '
-            'CircularProgressIndicator sebagai feedback '
-            'kepada pengguna.',
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'SnackBar digunakan untuk informasi singkat, '
-            'sedangkan Dialog digunakan untuk konfirmasi '
-            'sebelum aksi penting.',
-          ),
-
-          // =================================================
-          // TAHAP 16 - DEBUGGING CHALLENGE
-          // =================================================
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Tahap 16 - Debugging Challenge',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Pengujian dilakukan untuk mengatasi '
-            'RenderFlex overflow, unbounded viewport, '
-            'keyboard overflow, dan navigasi ganda.',
-          ),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // KASUS A
-          // =================================================
-
-          const Text(
-            'Kasus A - RenderFlex Overflow',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Menggunakan Expanded pada Text agar teks '
-            'panjang menyesuaikan ruang yang tersedia.',
-          ),
-
-          const SizedBox(height: 12),
-
-          const DebuggingRow(),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // KASUS B
-          // =================================================
-
-          const Text(
-            'Kasus B - Unbounded Height',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'GridView menggunakan shrinkWrap dan '
-            'NeverScrollableScrollPhysics agar aman '
-            'di dalam SingleChildScrollView.',
-          ),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // KASUS C
-          // =================================================
-
-          const Text(
-            'Kasus C - Keyboard Overflow',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Form menggunakan SingleChildScrollView '
-            'agar tetap dapat diakses ketika keyboard muncul.',
-          ),
-
-          const SizedBox(height: 20),
-
-          // =================================================
-          // KASUS D
-          // =================================================
-
-          const Text(
-            'Kasus D - Navigasi Ganda',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Gunakan tombol berikut untuk menguji '
-            'pencegahan navigasi ganda.',
-          ),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const HomePage(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.bug_report),
-              label: const Text(
-                'Uji Kasus D - Navigasi',
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Catatan/Temuan: Pada tahap debugging, '
-            'masalah layout dapat terjadi karena ruang '
-            'yang tidak cukup atau constraint yang tidak jelas. '
-            'Penggunaan Expanded, shrinkWrap, dan '
-            'SingleChildScrollView membantu menyesuaikan '
-            'widget dengan ruang yang tersedia. Pada navigasi, '
-            'state isNavigating mencegah tombol ditekan '
-            'berulang kali sehingga tidak terjadi navigasi ganda.',
-          ),
-
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -955,132 +352,30 @@ class _DashboardPageState extends State<DashboardPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Courses',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            'Mata Kuliah',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Daftar mata kuliah yang tersedia.',
-          ),
-
+          const SizedBox(height: 6),
+          const Text('Lihat detail dan tandai mata kuliah favorit.'),
           const SizedBox(height: 16),
-
           LayoutBuilder(
             builder: (context, constraints) {
               return GridView.builder(
                 shrinkWrap: true,
-                physics:
-                    const NeverScrollableScrollPhysics(),
-                gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount:
-                      columnsFor(
-                    constraints.maxWidth,
-                  ),
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columnsFor(constraints.maxWidth),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
+                  childAspectRatio: constraints.maxWidth < 600 ? 1.55 : 1.35,
                 ),
                 itemCount: courses.length,
-                itemBuilder:
-                    (context, index) =>
-                        CourseCard(
-                  course: courses[index],
-                ),
+                itemBuilder: (context, index) => CourseCard(course: courses[index]),
               );
             },
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Nama: I Gusti Made Wahyu Nugraha',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          const Text(
-            'NIM: 2455011005',
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Tahap 11 - Adaptive Navigation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Halaman Courses tetap aktif ketika '
-            'navigasi berpindah antara NavigationBar '
-            'dan NavigationRail.',
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Tahap 12 - Interaction',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Course dapat ditekan, diberi favorite, '
-            'dan ditekan lama untuk menampilkan informasi.',
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Tahap 13 - Form & Validation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Form validasi dapat dibuka melalui '
-            'halaman Profile.',
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Tahap 14 - Feedback',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Feedback pengguna menggunakan SnackBar, '
-            'Dialog, dan loading indicator.',
           ),
         ],
       ),
@@ -1094,336 +389,82 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildProfilePage({
     required Map<String, dynamic> student,
   }) {
-    final name =
-        student['name']?.toString() ??
-            studentName;
-
-    final nim =
-        student['nim']?.toString() ??
-            studentId;
-
-    final semester =
-        student['semester']?.toString() ??
-            'Semester 5';
+    final name = student['name']?.toString() ?? studentName;
+    final nim = student['nim']?.toString() ?? studentId;
+    final semester = student['semester']?.toString() ?? 'Semester 5';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Profile',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            'Profil Mahasiswa',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 20),
-
-          ProfileCard(
-            student: student,
-          ),
-
+          ProfileCard(student: student),
           const SizedBox(height: 24),
-
-          const Text(
-            'Informasi Mahasiswa',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Informasi Mahasiswa',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  _profileInfoRow(Icons.badge_outlined, 'Nama', name),
+                  _profileInfoRow(Icons.numbers, 'NIM', nim),
+                  _profileInfoRow(Icons.school_outlined, 'Semester', semester),
+                  _profileInfoRow(
+                    Icons.account_balance_outlined,
+                    'Program Studi',
+                    'Teknologi Rekayasa Perangkat Lunak',
+                  ),
+                  _profileInfoRow(
+                    Icons.location_city_outlined,
+                    'Universitas',
+                    'Universitas Pendidikan Ganesha',
+                  ),
+                ],
+              ),
             ),
           ),
-
-          const SizedBox(height: 12),
-
-          Text(
-            'Nama: $name',
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'NIM: $nim',
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Semester: $semester',
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Program Studi: '
-            'Teknologi Rekayasa Perangkat Lunak',
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Universitas Pendidikan Ganesha',
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Tahap 10 - Profile',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Halaman Profile menjadi salah satu '
-            'tujuan utama pada NavigationBar '
-            'dan NavigationRail.',
-          ),
-
           const SizedBox(height: 20),
-
-          const Text(
-            'Tahap 11 - Adaptive Navigation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Nama dan NIM tetap tersedia pada '
-            'halaman Profile.',
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Tahap 13 - Form & Validation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Gunakan form berikut untuk mengisi '
-            'data dengan validasi.',
-          ),
-
-          const SizedBox(height: 12),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const ProfileFormPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const ProfileFormPage()),
                 );
               },
-              icon: const Icon(Icons.edit),
-              label: const Text(
-                'Buka Form Profil',
-              ),
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Edit Profil'),
             ),
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Tahap 14 - Feedback',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          const Text(
-            'Form menggunakan Dialog untuk konfirmasi, '
-            'CircularProgressIndicator untuk loading, '
-            'dan SnackBar setelah proses selesai.',
           ),
         ],
       ),
     );
   }
-}
 
-// =====================================================
-// TAHAP 3 - COMPACT LAYOUT
-// =====================================================
-
-class CompactLayout extends StatelessWidget {
-  const CompactLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.blue.shade50,
-      child: const Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+  Widget _profileInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Compact Layout',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Icon(icon, size: 20, color: Colors.blue),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 105,
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
-          SizedBox(height: 8),
-          Text(
-            'Nama: I Gusti Made Wahyu Nugraha',
-          ),
-          Text(
-            'NIM: 2455011005',
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Tampilan sederhana untuk layar kecil.',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
-// TAHAP 3 - MEDIUM LAYOUT
-// =====================================================
-
-class MediumLayout extends StatelessWidget {
-  const MediumLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.green.shade50,
-      child: const Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Medium Layout',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Nama: I Gusti Made Wahyu Nugraha',
-          ),
-          Text(
-            'NIM: 2455011005',
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Tampilan menengah untuk ruang yang lebih luas.',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
-// TAHAP 3 - EXPANDED LAYOUT
-// =====================================================
-
-class ExpandedLayout extends StatelessWidget {
-  const ExpandedLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.orange.shade50,
-      child: const Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Expanded Layout',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Nama: I Gusti Made Wahyu Nugraha',
-          ),
-          Text(
-            'NIM: 2455011005',
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Tampilan untuk layar lebar seperti tablet atau desktop.',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
-// TAHAP 4 - PANEL BOX
-// =====================================================
-
-class PanelBox extends StatelessWidget {
-  final String title;
-  final String description;
-
-  const PanelBox({
-    super.key,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.blue,
-        ),
-        borderRadius:
-            BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(description),
+          Expanded(child: Text(value)),
         ],
       ),
     );
@@ -1951,69 +992,6 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 // =====================================================
-// GREETING CARD
-// =====================================================
-
-class GreetingCard extends StatefulWidget {
-  const GreetingCard({super.key});
-
-  @override
-  State<GreetingCard> createState() =>
-      _GreetingCardState();
-}
-
-class _GreetingCardState
-    extends State<GreetingCard> {
-  bool isVisible = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.orange.shade50,
-      child: Padding(
-        padding:
-            const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.waving_hand,
-              color: Colors.orange,
-              size: 30,
-            ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Text(
-                isVisible
-                    ? 'Halo, Wahyu! Selamat belajar Flutter.'
-                    : 'Tetap semangat belajar!',
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
-              ),
-            ),
-
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  isVisible =
-                      !isVisible;
-                });
-              },
-              icon: const Icon(
-                Icons.refresh,
-              ),
-              tooltip: 'Ubah sapaan',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
 // TAHAP 6, 13 & 14 - PROFILE / FORM
 // =====================================================
 
@@ -2338,53 +1316,6 @@ class _ProfileFormPageState
 
               const SizedBox(height: 20),
 
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.all(16),
-                decoration:
-                    BoxDecoration(
-                  border: Border.all(
-                    color: Colors.blue,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(
-                    8,
-                  ),
-                ),
-                child: const Text(
-                  'Konten ini dibuat lebih tinggi '
-                  'dari layar untuk menguji '
-                  'kemampuan scroll.',
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'Catatan',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight:
-                      FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              const TextField(
-                maxLines: 5,
-                decoration:
-                    InputDecoration(
-                  hintText:
-                      'Tulis catatan pembelajaran...',
-                  border:
-                      OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
               // =================================================
               // TAHAP 14
               // =================================================
@@ -2421,263 +1352,8 @@ class _ProfileFormPageState
                 ),
               ),
 
-              const SizedBox(height: 300),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
-// TAHAP 16 - KASUS A
-// RENDERFLEX OVERFLOW
-// =====================================================
-
-class DebuggingRow extends StatelessWidget {
-  const DebuggingRow({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.info),
-
-        const SizedBox(width: 8),
-
-        Expanded(
-          child: Text(
-            '$studentId - $studentName - '
-            'teks sangat panjang untuk menguji '
-            'RenderFlex overflow pada Row.',
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// =====================================================
-// TAHAP 7 & 16 - HOME PAGE
-// KASUS D: NAVIGASI GANDA
-// =====================================================
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() =>
-      _HomePageState();
-}
-
-class _HomePageState
-    extends State<HomePage> {
-  bool isNavigating = false;
-
-  // ===================================================
-  // KASUS D
-  // MENCEGAH NAVIGASI GANDA
-  // ===================================================
-
-  Future<void> openDetail() async {
-    if (isNavigating) {
-      return;
-    }
-
-    setState(() {
-      isNavigating = true;
-    });
-
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            const DetailPage(),
-      ),
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      isNavigating = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Home Page',
-        ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '$studentId - $studentName',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'Tahap 7 - Navigation Dasar',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            const Text(
-              'Halaman Home dibuat untuk menguji '
-              'Navigator.push() dan Navigator.pop().',
-            ),
-
-            const SizedBox(height: 24),
-
-            // =================================================
-            // TAHAP 16
-            // =================================================
-
-            const Text(
-              'Tahap 16 - Kasus D',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            const Text(
-              'Tombol dibuat nonaktif ketika proses '
-              'navigasi sedang berlangsung untuk '
-              'mencegah navigasi ganda.',
-            ),
-
-            const SizedBox(height: 16),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed:
-                    isNavigating
-                        ? null
-                        : openDetail,
-                child: isNavigating
-                    ? const Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 18,
-                            height: 18,
-                            child:
-                                CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            'Membuka halaman...',
-                          ),
-                        ],
-                      )
-                    : const Text(
-                        'Buka Detail',
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
-// TAHAP 7 - DETAIL PAGE
-// =====================================================
-
-class DetailPage extends StatelessWidget {
-  const DetailPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Detail Page',
-        ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '$studentId - $studentName',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'Detail Page',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            const Text(
-              'Halaman ini dibuka menggunakan '
-              'Navigator.push().',
-            ),
-
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(
-                    context,
-                  );
-                },
-                child: const Text(
-                  'Kembali',
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
