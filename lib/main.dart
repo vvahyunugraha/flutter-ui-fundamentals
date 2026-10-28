@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
 // =====================================================
 // DASHBOARD
 // TAHAP 3: LIFTING STATE UP
-// SINGLE SOURCE OF TRUTH
+// TAHAP 4: VALUENOTIFIER
 // =====================================================
 
 class DashboardPage extends StatefulWidget {
@@ -70,8 +70,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   int currentIndex = 0;
 
-  // Satu sumber data favorit untuk Home dan Courses.
+  // Tahap 3: satu sumber data favorit untuk Home dan Courses.
   final Set<String> favorites = <String>{};
+
+  // Tahap 4: ValueNotifier untuk menyimpan nilai counter sederhana.
+  final ValueNotifier<int> counter = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -97,6 +100,13 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       favorites.add(code);
     });
+  }
+
+  // Membersihkan ValueNotifier ketika DashboardPage ditutup.
+  @override
+  void dispose() {
+    counter.dispose();
+    super.dispose();
   }
 
   // ===================================================
@@ -283,6 +293,72 @@ class _DashboardPageState extends State<DashboardPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProfileCard(student: student),
+
+          // =================================================
+          // TAHAP 4: DEMO VALUENOTIFIER
+          // =================================================
+
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Demo ValueNotifier',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Ubah nilai counter tanpa memanggil setState '
+                    'pada DashboardPage.',
+                  ),
+                  const SizedBox(height: 16),
+
+                  // UI ini mendengarkan perubahan counter.
+                  ValueListenableBuilder<int>(
+                    valueListenable: counter,
+                    builder: (context, value, child) {
+                      return Text(
+                        'Nilai counter: $value',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      OutlinedButton(
+                        onPressed: () {
+                          if (counter.value > 0) {
+                            counter.value--;
+                          }
+                        },
+                        child: const Icon(Icons.remove),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          counter.value++;
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Tambah'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 20),
           const Text(
             'Ringkasan Pembelajaran',
@@ -355,14 +431,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   return CourseCard(
                     key: ValueKey('home_$code'),
                     course: course,
-
-                    // Parent mengirimkan state ke child.
                     isFavorite: favorites.contains(code),
-
-                    // Child meminta parent mengubah state.
                     onFavoriteToggle: () => toggleFavorite(code),
-
-                    // Hasil pemilihan dari halaman detail.
                     onFavoriteSelected: () => addFavorite(code),
                   );
                 },
@@ -434,8 +504,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   return CourseCard(
                     key: ValueKey('courses_$code'),
                     course: course,
-
-                    // Menggunakan state favorit yang sama dengan Home.
                     isFavorite: favorites.contains(code),
                     onFavoriteToggle: () => toggleFavorite(code),
                     onFavoriteSelected: () => addFavorite(code),
@@ -491,11 +559,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 16),
                   _profileInfoRow(Icons.badge_outlined, 'Nama', name),
                   _profileInfoRow(Icons.numbers, 'NIM', nim),
-                  _profileInfoRow(
-                    Icons.school_outlined,
-                    'Semester',
-                    semester,
-                  ),
+                  _profileInfoRow(Icons.school_outlined, 'Semester', semester),
                   _profileInfoRow(
                     Icons.account_balance_outlined,
                     'Program Studi',
@@ -674,7 +738,6 @@ class SummaryCard extends StatelessWidget {
 // =====================================================
 // COURSE CARD
 // Child menerima state dan callback dari parent.
-// Tidak memiliki state favorit sendiri.
 // =====================================================
 
 class CourseCard extends StatelessWidget {
@@ -789,7 +852,6 @@ class CourseCard extends StatelessWidget {
                 onPressed: () {
                   final wasFavorite = isFavorite;
 
-                  // Child meminta parent mengubah state.
                   onFavoriteToggle();
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -891,15 +953,9 @@ class CourseDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'Kode: $code',
-                      style: const TextStyle(fontSize: 16),
-                    ),
+                    Text('Kode: $code', style: const TextStyle(fontSize: 16)),
                     const SizedBox(height: 8),
-                    Text(
-                      'SKS: $credits',
-                      style: const TextStyle(fontSize: 16),
-                    ),
+                    Text('SKS: $credits', style: const TextStyle(fontSize: 16)),
                     const SizedBox(height: 8),
                     Text(
                       'Status: $statusText',
