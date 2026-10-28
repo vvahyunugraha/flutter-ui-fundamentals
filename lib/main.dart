@@ -1,6 +1,8 @@
 
 import 'dart:convert';
 
+import 'package:provider/provider.dart';
+import 'course_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -26,7 +28,12 @@ int columnsFor(double width) {
 }
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CourseState(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 // =====================================================
