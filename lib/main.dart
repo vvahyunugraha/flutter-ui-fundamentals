@@ -7,9 +7,14 @@ import 'package:provider/provider.dart';
 
 import 'course_state.dart';
 import 'models/course.dart';
+import 'services/course_service.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
 const String studentId = '2455011005';
+
+// =====================================================
+// MEMBACA DATA PROFIL MAHASISWA
+// =====================================================
 
 Future<Map<String, dynamic>> loadStudentData() async {
   final jsonString = await rootBundle.loadString(
@@ -68,6 +73,7 @@ class MyApp extends StatelessWidget {
 // TAHAP 6: PROVIDER
 // TAHAP 7: WATCH, READ, CONSUMER
 // TAHAP 8: MODEL COURSE
+// TAHAP 9: SERVICE / DATA SOURCE
 // =====================================================
 
 class DashboardPage extends StatefulWidget {
@@ -79,16 +85,25 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
+  late Future<List<Course>> coursesFuture;
 
   int currentIndex = 0;
 
   // Tahap 4: ValueNotifier untuk counter sederhana.
   final ValueNotifier<int> counter = ValueNotifier<int>(0);
 
+  // Service untuk membaca dan mengolah data mata kuliah.
+  final CourseService courseService = CourseService();
+
   @override
   void initState() {
     super.initState();
+
+    // Data profil tetap dibaca seperti sebelumnya.
     studentFuture = loadStudentData();
+
+    // Data mata kuliah dibaca melalui CourseService.
+    coursesFuture = courseService.loadCourses();
   }
 
   @override
@@ -176,76 +191,134 @@ class _DashboardPageState extends State<DashboardPage> {
       body: SafeArea(
         child: FutureBuilder<Map<String, dynamic>>(
           future: studentFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+          builder: (context, studentSnapshot) {
+            if (studentSnapshot.connectionState ==
+                ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
             }
 
-            if (snapshot.hasError) {
+            if (studentSnapshot.hasError) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Gagal memuat data:\n${snapshot.error}',
+                    'Gagal memuat data mahasiswa:\n'
+                    '${studentSnapshot.error}',
                     textAlign: TextAlign.center,
                   ),
                 ),
               );
             }
 
-            if (!snapshot.hasData) {
+            if (!studentSnapshot.hasData) {
               return const Center(
-                child: Text('Data tidak tersedia.'),
+                child: Text('Data mahasiswa tidak tersedia.'),
               );
             }
 
-            final data = snapshot.data!;
+            final data = studentSnapshot.data!;
 
             final student = Map<String, dynamic>.from(
               data['student'] as Map,
             );
 
-            // Tahap 8:
-            // Mengubah setiap data JSON menjadi objek Course.
-            final courses = (data['courses'] as List)
-                .map(
-                  (courseJson) => Course.fromJson(
-                    Map<String, dynamic>.from(courseJson as Map),
-                  ),
-                )
-                .toList();
-
-            Widget currentPage;
-
-            if (currentIndex == 0) {
-              currentPage = _buildHomePage(
-                student: student,
-                courses: courses,
-              );
-            } else if (currentIndex == 1) {
-              currentPage = _buildCoursesPage(
-                courses: courses,
-              );
-            } else {
-              currentPage = _buildProfilePage(
-                student: student,
-              );
-            }
-
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 840) {
-                  return currentPage;
+            // Tahap 9:
+            // Data mata kuliah dimuat melalui CourseService.
+            return FutureBuilder<List<Course>>(
+              future: coursesFuture,
+              builder: (context, courseSnapshot) {
+                if (courseSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
                 }
 
-                return Row(
-                  children: [
-                    buildNavigationRail(),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: currentPage),
-                  ],
+                if (courseSnapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Gagal memuat mata kuliah.',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${courseSnapshot.error}',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                coursesFuture =
+                                    courseService.loadCourses();
+                              });
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (!courseSnapshot.hasData) {
+                  return const Center(
+                    child: Text(
+                      'Data mata kuliah tidak tersedia.',
+                    ),
+                  );
+                }
+
+                final courses = courseSnapshot.data!;
+
+                Widget currentPage;
+
+                if (currentIndex == 0) {
+                  currentPage = _buildHomePage(
+                    student: student,
+                    courses: courses,
+                  );
+                } else if (currentIndex == 1) {
+                  currentPage = _buildCoursesPage(
+                    courses: courses,
+                  );
+                } else {
+                  currentPage = _buildProfilePage(
+                    student: student,
+                  );
+                }
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 840) {
+                      return currentPage;
+                    }
+
+                    return Row(
+                      children: [
+                        buildNavigationRail(),
+                        const VerticalDivider(width: 1),
+                        Expanded(child: currentPage),
+                      ],
+                    );
+                  },
                 );
               },
             );
@@ -284,10 +357,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           ProfileCard(student: student),
 
-          // ===============================================
           // TAHAP 4: DEMO VALUENOTIFIER
-          // ===============================================
-
           const SizedBox(height: 16),
           Card(
             child: Padding(
@@ -346,10 +416,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-          // ===============================================
           // TAHAP 7: CONSUMER
-          // ===============================================
-
           const SizedBox(height: 16),
           Consumer<CourseState>(
             builder: (context, courseState, child) {
@@ -501,7 +568,6 @@ class _DashboardPageState extends State<DashboardPage> {
             'Lihat detail dan tandai mata kuliah favorit.',
           ),
 
-          // Tahap 7: Consumer memperbarui bagian daftar course.
           Consumer<CourseState>(
             builder: (context, courseState, child) {
               return Padding(
@@ -594,7 +660,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 16),
                   _profileInfoRow(Icons.badge_outlined, 'Nama', name),
                   _profileInfoRow(Icons.numbers, 'NIM', nim),
-                  _profileInfoRow(Icons.school_outlined, 'Semester', semester),
+                  _profileInfoRow(
+                    Icons.school_outlined,
+                    'Semester',
+                    semester,
+                  ),
                   _profileInfoRow(
                     Icons.account_balance_outlined,
                     'Program Studi',
