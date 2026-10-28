@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
@@ -6,18 +5,25 @@ import 'package:flutter/material.dart';
 // Tahap 5: ChangeNotifier dan notifyListeners()
 
 class CourseState extends ChangeNotifier {
-  // Menyimpan kode mata kuliah yang menjadi favorit.
   final Set<String> favorites = <String>{};
 
-  // Mengubah status favorite mata kuliah.
-  void toggleFavorite(String id) {
-    if (favorites.contains(id)) {
-      favorites.remove(id);
+  void toggleFavorite(String code) {
+    if (favorites.contains(code)) {
+      favorites.remove(code);
     } else {
-      favorites.add(id);
+      favorites.add(code);
     }
 
-    // Memberi tahu listener bahwa state telah berubah.
     notifyListeners();
+  }
+
+  void addFavorite(String code) {
+    if (favorites.add(code)) {
+      notifyListeners();
+    }
+  }
+
+  bool isFavorite(String code) {
+    return favorites.contains(code);
   }
 }

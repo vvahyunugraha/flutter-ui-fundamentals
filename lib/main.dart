@@ -1,10 +1,11 @@
 
 import 'dart:convert';
 
-import 'package:provider/provider.dart';
-import 'course_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:provider/provider.dart';
+
+import 'course_state.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
 const String studentId = '2455011005';
@@ -63,6 +64,8 @@ class MyApp extends StatelessWidget {
 // DASHBOARD
 // TAHAP 3: LIFTING STATE UP
 // TAHAP 4: VALUENOTIFIER
+// TAHAP 6: PROVIDER
+// TAHAP 7: WATCH, READ, CONSUMER
 // =====================================================
 
 class DashboardPage extends StatefulWidget {
@@ -77,10 +80,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   int currentIndex = 0;
 
-  // Tahap 3: satu sumber data favorit untuk Home dan Courses.
-  final Set<String> favorites = <String>{};
-
-  // Tahap 4: ValueNotifier untuk menyimpan nilai counter sederhana.
+  // Tahap 4: ValueNotifier untuk counter sederhana.
   final ValueNotifier<int> counter = ValueNotifier<int>(0);
 
   @override
@@ -89,27 +89,6 @@ class _DashboardPageState extends State<DashboardPage> {
     studentFuture = loadStudentData();
   }
 
-  // Parent mengubah state favorit.
-  void toggleFavorite(String code) {
-    setState(() {
-      if (favorites.contains(code)) {
-        favorites.remove(code);
-      } else {
-        favorites.add(code);
-      }
-    });
-  }
-
-  // Dipanggil ketika pengguna memilih favorite dari halaman detail.
-  void addFavorite(String code) {
-    if (favorites.contains(code)) return;
-
-    setState(() {
-      favorites.add(code);
-    });
-  }
-
-  // Membersihkan ValueNotifier ketika DashboardPage ditutup.
   @override
   void dispose() {
     counter.dispose();
@@ -301,9 +280,9 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           ProfileCard(student: student),
 
-          // =================================================
+          // ===============================================
           // TAHAP 4: DEMO VALUENOTIFIER
-          // =================================================
+          // ===============================================
 
           const SizedBox(height: 16),
           Card(
@@ -325,8 +304,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     'pada DashboardPage.',
                   ),
                   const SizedBox(height: 16),
-
-                  // UI ini mendengarkan perubahan counter.
                   ValueListenableBuilder<int>(
                     valueListenable: counter,
                     builder: (context, value, child) {
@@ -339,7 +316,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       );
                     },
                   ),
-
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -364,6 +340,35 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
             ),
+          ),
+
+          // ===============================================
+          // TAHAP 7: CONSUMER
+          // ===============================================
+
+          const SizedBox(height: 16),
+          Consumer<CourseState>(
+            builder: (context, courseState, child) {
+              return Card(
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.favorite,
+                    color: Colors.red,
+                  ),
+                  title: const Text('Mata Kuliah Favorit'),
+                  subtitle: const Text(
+                    'Jumlah mata kuliah yang ditandai favorit',
+                  ),
+                  trailing: Text(
+                    '${courseState.favorites.length}',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 20),
@@ -435,12 +440,15 @@ class _DashboardPageState extends State<DashboardPage> {
                   final course = courses[index];
                   final code = course['code']?.toString() ?? '-';
 
+                  // Tahap 7: watch mendengarkan perubahan state.
+                  final isFavorite = context
+                      .watch<CourseState>()
+                      .isFavorite(code);
+
                   return CourseCard(
                     key: ValueKey('home_$code'),
                     course: course,
-                    isFavorite: favorites.contains(code),
-                    onFavoriteToggle: () => toggleFavorite(code),
-                    onFavoriteSelected: () => addFavorite(code),
+                    isFavorite: isFavorite,
                   );
                 },
               );
@@ -490,6 +498,23 @@ class _DashboardPageState extends State<DashboardPage> {
           const Text(
             'Lihat detail dan tandai mata kuliah favorit.',
           ),
+
+          // Tahap 7: Consumer memperbarui bagian daftar course.
+          Consumer<CourseState>(
+            builder: (context, courseState, child) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Jumlah favorit: ${courseState.favorites.length}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
+                  ),
+                ),
+              );
+            },
+          ),
+
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -508,12 +533,15 @@ class _DashboardPageState extends State<DashboardPage> {
                   final course = courses[index];
                   final code = course['code']?.toString() ?? '-';
 
+                  // watch membuat ikon favorit ikut diperbarui.
+                  final isFavorite = context
+                      .watch<CourseState>()
+                      .isFavorite(code);
+
                   return CourseCard(
                     key: ValueKey('courses_$code'),
                     course: course,
-                    isFavorite: favorites.contains(code),
-                    onFavoriteToggle: () => toggleFavorite(code),
-                    onFavoriteSelected: () => addFavorite(code),
+                    isFavorite: isFavorite,
                   );
                 },
               );
@@ -744,21 +772,17 @@ class SummaryCard extends StatelessWidget {
 
 // =====================================================
 // COURSE CARD
-// Child menerima state dan callback dari parent.
+// Tahap 7: read digunakan untuk menjalankan aksi.
 // =====================================================
 
 class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
-  final VoidCallback onFavoriteToggle;
-  final VoidCallback onFavoriteSelected;
 
   const CourseCard({
     super.key,
     required this.course,
     required this.isFavorite,
-    required this.onFavoriteToggle,
-    required this.onFavoriteSelected,
   });
 
   @override
@@ -803,7 +827,8 @@ class CourseCard extends StatelessWidget {
           if (!context.mounted) return;
 
           if (result == true) {
-            onFavoriteSelected();
+            // read menjalankan aksi tanpa berlangganan state.
+            context.read<CourseState>().addFavorite(code);
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -859,7 +884,8 @@ class CourseCard extends StatelessWidget {
                 onPressed: () {
                   final wasFavorite = isFavorite;
 
-                  onFavoriteToggle();
+                  // read hanya dipanggil ketika tombol ditekan.
+                  context.read<CourseState>().toggleFavorite(code);
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
