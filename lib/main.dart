@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class MyApp extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 10 & 11 - NAVIGATION SHELL
+// TAHAP 10, 11, DAN 2 - DASHBOARD
 // =====================================================
 
 class DashboardPage extends StatefulWidget {
@@ -67,10 +68,33 @@ class _DashboardPageState extends State<DashboardPage> {
 
   int currentIndex = 0;
 
+  // TAHAP 2: State favorite dikelola oleh parent.
+  final Set<String> favorites = <String>{};
+
   @override
   void initState() {
     super.initState();
     studentFuture = loadStudentData();
+  }
+
+  // Menambah atau menghapus favorite.
+  void toggleFavorite(String code) {
+    setState(() {
+      if (favorites.contains(code)) {
+        favorites.remove(code);
+      } else {
+        favorites.add(code);
+      }
+    });
+  }
+
+  // Menambahkan favorite tanpa menghapus yang sudah ada.
+  void addFavorite(String code) {
+    if (favorites.contains(code)) return;
+
+    setState(() {
+      favorites.add(code);
+    });
   }
 
   // ===================================================
@@ -145,13 +169,11 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-
       body: SafeArea(
         child: FutureBuilder<Map<String, dynamic>>(
           future: studentFuture,
           builder: (context, snapshot) {
-            if (snapshot.connectionState ==
-                ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
@@ -171,28 +193,23 @@ class _DashboardPageState extends State<DashboardPage> {
 
             if (!snapshot.hasData) {
               return const Center(
-                child: Text(
-                  'Data tidak tersedia.',
-                ),
+                child: Text('Data tidak tersedia.'),
               );
             }
 
             final data = snapshot.data!;
 
-            final student =
-                Map<String, dynamic>.from(
+            final student = Map<String, dynamic>.from(
               data['student'] as Map,
             );
 
-            final courses =
-                (data['courses'] as List)
-                    .map(
-                      (course) =>
-                          Map<String, dynamic>.from(
-                        course as Map,
-                      ),
-                    )
-                    .toList();
+            final courses = (data['courses'] as List)
+                .map(
+                  (course) => Map<String, dynamic>.from(
+                    course as Map,
+                  ),
+                )
+                .toList();
 
             Widget currentPage;
 
@@ -220,12 +237,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 return Row(
                   children: [
                     buildNavigationRail(),
-                    const VerticalDivider(
-                      width: 1,
-                    ),
-                    Expanded(
-                      child: currentPage,
-                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: currentPage),
                   ],
                 );
               },
@@ -233,7 +246,6 @@ class _DashboardPageState extends State<DashboardPage> {
           },
         ),
       ),
-
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 840) {
@@ -268,7 +280,10 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 20),
           const Text(
             'Ringkasan Pembelajaran',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -298,10 +313,17 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               const Text(
                 'Mata Kuliah',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               TextButton(
-                onPressed: () => setState(() => currentIndex = 1),
+                onPressed: () {
+                  setState(() {
+                    currentIndex = 1;
+                  });
+                },
                 child: const Text('Lihat semua'),
               ),
             ],
@@ -316,10 +338,22 @@ class _DashboardPageState extends State<DashboardPage> {
                   crossAxisCount: columnsFor(constraints.maxWidth),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: constraints.maxWidth < 600 ? 1.55 : 1.35,
+                  childAspectRatio:
+                      constraints.maxWidth < 600 ? 1.55 : 1.35,
                 ),
                 itemCount: courses.length,
-                itemBuilder: (context, index) => CourseCard(course: courses[index]),
+                itemBuilder: (context, index) {
+                  final course = courses[index];
+                  final code = course['code']?.toString() ?? '-';
+
+                  return CourseCard(
+                    key: ValueKey('home_$code'),
+                    course: course,
+                    isFavorite: favorites.contains(code),
+                    onFavoriteToggle: () => toggleFavorite(code),
+                    onFavoriteSelected: () => addFavorite(code),
+                  );
+                },
               );
             },
           ),
@@ -330,7 +364,9 @@ class _DashboardPageState extends State<DashboardPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileFormPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileFormPage(),
+                  ),
                 );
               },
               icon: const Icon(Icons.edit_outlined),
@@ -356,7 +392,10 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           const Text(
             'Mata Kuliah',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
           const Text('Lihat detail dan tandai mata kuliah favorit.'),
@@ -370,10 +409,22 @@ class _DashboardPageState extends State<DashboardPage> {
                   crossAxisCount: columnsFor(constraints.maxWidth),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: constraints.maxWidth < 600 ? 1.55 : 1.35,
+                  childAspectRatio:
+                      constraints.maxWidth < 600 ? 1.55 : 1.35,
                 ),
                 itemCount: courses.length,
-                itemBuilder: (context, index) => CourseCard(course: courses[index]),
+                itemBuilder: (context, index) {
+                  final course = courses[index];
+                  final code = course['code']?.toString() ?? '-';
+
+                  return CourseCard(
+                    key: ValueKey('courses_$code'),
+                    course: course,
+                    isFavorite: favorites.contains(code),
+                    onFavoriteToggle: () => toggleFavorite(code),
+                    onFavoriteSelected: () => addFavorite(code),
+                  );
+                },
               );
             },
           ),
@@ -400,7 +451,10 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           const Text(
             'Profil Mahasiswa',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 20),
           ProfileCard(student: student),
@@ -413,12 +467,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   const Text(
                     'Informasi Mahasiswa',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _profileInfoRow(Icons.badge_outlined, 'Nama', name),
                   _profileInfoRow(Icons.numbers, 'NIM', nim),
-                  _profileInfoRow(Icons.school_outlined, 'Semester', semester),
+                  _profileInfoRow(
+                    Icons.school_outlined,
+                    'Semester',
+                    semester,
+                  ),
                   _profileInfoRow(
                     Icons.account_balance_outlined,
                     'Program Studi',
@@ -440,7 +501,9 @@ class _DashboardPageState extends State<DashboardPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileFormPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileFormPage(),
+                  ),
                 );
               },
               icon: const Icon(Icons.edit_outlined),
@@ -452,7 +515,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _profileInfoRow(IconData icon, String label, String value) {
+  Widget _profileInfoRow(
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -462,7 +529,10 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(width: 12),
           SizedBox(
             width: 105,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
           Expanded(child: Text(value)),
         ],
@@ -485,17 +555,9 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name =
-        student['name']?.toString() ??
-            studentName;
-
-    final nim =
-        student['nim']?.toString() ??
-            studentId;
-
-    final semester =
-        student['semester']?.toString() ??
-            'Semester 5';
+    final name = student['name']?.toString() ?? studentName;
+    final nim = student['nim']?.toString() ?? studentId;
+    final semester = student['semester']?.toString() ?? 'Semester 5';
 
     return Card(
       elevation: 3,
@@ -513,13 +575,10 @@ class ProfileCard extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-
             const SizedBox(width: 16),
-
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
@@ -528,21 +587,12 @@ class ProfileCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 5),
-
-                  Text(
-                    'NIM: $nim',
-                  ),
-
+                  Text('NIM: $nim'),
                   const SizedBox(height: 5),
-
                   Text(
                     semester,
-                    style: TextStyle(
-                      color:
-                          Colors.blue.shade800,
-                    ),
+                    style: TextStyle(color: Colors.blue.shade800),
                   ),
                 ],
               ),
@@ -577,21 +627,14 @@ class SummaryCard extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           vertical: 16,
           horizontal: 8,
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              size: 30,
-              color: color,
-            ),
-
+            Icon(icon, size: 30, color: color),
             const SizedBox(height: 8),
-
             Text(
               value,
               style: const TextStyle(
@@ -599,15 +642,11 @@ class SummaryCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 4),
-
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-              ),
+              style: const TextStyle(fontSize: 12),
             ),
           ],
         ),
@@ -617,39 +656,30 @@ class SummaryCard extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 12 - COURSE CARD
+// TAHAP 2 - COURSE CARD
+// State favorite tidak disimpan di widget ini.
 // =====================================================
 
-class CourseCard extends StatefulWidget {
+class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
+  final VoidCallback onFavoriteSelected;
 
   const CourseCard({
     super.key,
     required this.course,
+    required this.isFavorite,
+    required this.onFavoriteToggle,
+    required this.onFavoriteSelected,
   });
 
   @override
-  State<CourseCard> createState() =>
-      _CourseCardState();
-}
-
-class _CourseCardState extends State<CourseCard> {
-  bool isFavorite = false;
-
-  @override
   Widget build(BuildContext context) {
-    final title =
-        widget.course['title']?.toString() ?? '-';
-
-    final code =
-        widget.course['code']?.toString() ?? '-';
-
-    final credits =
-        widget.course['credits']?.toString() ?? '0';
-
-    final status =
-        widget.course['status']?.toString() ??
-            'planned';
+    final title = course['title']?.toString() ?? '-';
+    final code = course['code']?.toString() ?? '-';
+    final credits = course['credits']?.toString() ?? '0';
+    final status = course['status']?.toString() ?? 'planned';
 
     IconData statusIcon;
     Color statusColor;
@@ -672,117 +702,84 @@ class _CourseCardState extends State<CourseCard> {
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
-        borderRadius:
-            BorderRadius.circular(12),
-
+        borderRadius: BorderRadius.circular(12),
         onTap: () async {
-          final result =
-              await Navigator.push<bool>(
+          final result = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  CourseDetailPage(
-                course: widget.course,
+              builder: (context) => CourseDetailPage(
+                course: course,
               ),
             ),
           );
 
-          if (result == true &&
-              context.mounted) {
-            setState(() {
-              isFavorite = true;
-            });
+          if (!context.mounted) return;
 
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(
+          if (result == true) {
+            onFavoriteSelected();
+
+            ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text(
-                  'Course berhasil dipilih',
-                ),
+                content: Text('Course berhasil dipilih'),
               ),
             );
           }
         },
-
         onLongPress: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Course: $title\nKode: $code',
-              ),
+              content: Text('Course: $title\nKode: $code'),
             ),
           );
         },
-
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
                 statusIcon,
                 color: statusColor,
                 size: 28,
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
                       style: const TextStyle(
                         fontSize: 15,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 5),
-
-                    Text(
-                      'Kode: $code',
-                    ),
-
-                    Text(
-                      'SKS: $credits',
-                    ),
-
+                    Text('Kode: $code'),
+                    Text('SKS: $credits'),
                     const SizedBox(height: 5),
-
                     Text(
                       statusText,
                       style: TextStyle(
                         color: statusColor,
-                        fontWeight:
-                            FontWeight.w600,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-
               IconButton(
                 onPressed: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                  });
+                  final wasFavorite = isFavorite;
 
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(
+                  onFavoriteToggle();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        isFavorite
-                            ? 'Course ditambahkan ke favorite'
-                            : 'Course dihapus dari favorite',
+                        wasFavorite
+                            ? 'Course dihapus dari favorite'
+                            : 'Course ditambahkan ke favorite',
                       ),
                     ),
                   );
@@ -792,9 +789,7 @@ class _CourseCardState extends State<CourseCard> {
                       ? Icons.favorite
                       : Icons.favorite_border,
                 ),
-                color: isFavorite
-                    ? Colors.red
-                    : null,
+                color: isFavorite ? Colors.red : null,
                 tooltip: isFavorite
                     ? 'Hapus favorite'
                     : 'Tambah favorite',
@@ -821,18 +816,10 @@ class CourseDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title =
-        course['title']?.toString() ?? '-';
-
-    final code =
-        course['code']?.toString() ?? '-';
-
-    final credits =
-        course['credits']?.toString() ?? '0';
-
-    final status =
-        course['status']?.toString() ??
-            'planned';
+    final title = course['title']?.toString() ?? '-';
+    final code = course['code']?.toString() ?? '-';
+    final credits = course['credits']?.toString() ?? '0';
+    final status = course['status']?.toString() ?? 'planned';
 
     String statusText;
 
@@ -846,142 +833,94 @@ class CourseDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Course Detail',
-        ),
+        title: const Text('Course Detail'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               '$studentId - $studentName',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 24),
-
             const Text(
               'Detail Course',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 20),
-
             Card(
               elevation: 2,
               child: Padding(
-                padding:
-                    const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
                       style: const TextStyle(
                         fontSize: 20,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     Text(
                       'Kode: $code',
-                      style: const TextStyle(
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(fontSize: 16),
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       'SKS: $credits',
-                      style: const TextStyle(
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(fontSize: 16),
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       'Status: $statusText',
-                      style: const TextStyle(
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
             const Text(
               'Informasi Mahasiswa',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 12),
-
-            const Text(
-              'Nama: $studentName',
-            ),
-
+            const Text('Nama: $studentName'),
             const SizedBox(height: 8),
-
-            const Text(
-              'NIM: $studentId',
-            ),
-
+            const Text('NIM: $studentId'),
             const SizedBox(height: 24),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(
-                    context,
-                    true,
-                  );
+                  Navigator.pop(context, true);
                 },
-                child: const Text(
-                  'Pilih/Favorite',
-                ),
+                child: const Text('Pilih/Favorite'),
               ),
             ),
-
             const SizedBox(height: 12),
-
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  Navigator.pop(
-                    context,
-                  );
+                  Navigator.pop(context);
                 },
-                child: const Text(
-                  'Kembali',
-                ),
+                child: const Text('Kembali'),
               ),
             ),
           ],
@@ -992,32 +931,25 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 // =====================================================
-// TAHAP 6, 13 & 14 - PROFILE / FORM
+// TAHAP 6, 13, DAN 14 - PROFILE / FORM
 // =====================================================
 
 class ProfileFormPage extends StatefulWidget {
   const ProfileFormPage({super.key});
 
   @override
-  State<ProfileFormPage> createState() =>
-      _ProfileFormPageState();
+  State<ProfileFormPage> createState() => _ProfileFormPageState();
 }
 
-class _ProfileFormPageState
-    extends State<ProfileFormPage> {
-  final _formKey =
-      GlobalKey<FormState>();
+class _ProfileFormPageState extends State<ProfileFormPage> {
+  final _formKey = GlobalKey<FormState>();
 
-  final nameController =
-      TextEditingController(
+  final nameController = TextEditingController(
     text: studentName,
   );
 
-  final emailController =
-      TextEditingController();
-
-  final addressController =
-      TextEditingController();
+  final emailController = TextEditingController();
+  final addressController = TextEditingController();
 
   bool isLoading = false;
 
@@ -1030,8 +962,7 @@ class _ProfileFormPageState
   }
 
   String? validateName(String? value) {
-    if (value == null ||
-        value.trim().isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Nama tidak boleh kosong';
     }
 
@@ -1039,8 +970,7 @@ class _ProfileFormPageState
   }
 
   String? validateEmail(String? value) {
-    if (value == null ||
-        value.trim().isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Email tidak boleh kosong';
     }
 
@@ -1048,9 +978,7 @@ class _ProfileFormPageState
       r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
     );
 
-    if (!emailPattern.hasMatch(
-      value.trim(),
-    )) {
+    if (!emailPattern.hasMatch(value.trim())) {
       return 'Masukkan email yang valid';
     }
 
@@ -1058,51 +986,36 @@ class _ProfileFormPageState
   }
 
   String? validateAddress(String? value) {
-    if (value == null ||
-        value.trim().isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Alamat tidak boleh kosong';
     }
 
     return null;
   }
 
-  // ===================================================
-  // TAHAP 14 - DIALOG
-  // ===================================================
+  // TAHAP 14 - DIALOG KONFIRMASI
 
   Future<bool> showSaveConfirmation() async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Konfirmasi',
-          ),
+          title: const Text('Konfirmasi'),
           content: const Text(
             'Apakah data profil ingin disimpan?',
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(
-                  context,
-                  false,
-                );
+                Navigator.pop(context, false);
               },
-              child: const Text(
-                'Batal',
-              ),
+              child: const Text('Batal'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(
-                  context,
-                  true,
-                );
+                Navigator.pop(context, true);
               },
-              child: const Text(
-                'Simpan',
-              ),
+              child: const Text('Simpan'),
             ),
           ],
         );
@@ -1112,18 +1025,14 @@ class _ProfileFormPageState
     return result ?? false;
   }
 
-  // ===================================================
   // TAHAP 14 - LOADING
-  // ===================================================
 
   Future<void> processSave() async {
     setState(() {
       isLoading = true;
     });
 
-    await Future.delayed(
-      const Duration(seconds: 2),
-    );
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
@@ -1131,13 +1040,9 @@ class _ProfileFormPageState
       isLoading = false;
     });
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          'Data berhasil disimpan',
-        ),
+        content: Text('Data berhasil disimpan'),
       ),
     );
   }
@@ -1147,8 +1052,7 @@ class _ProfileFormPageState
       return;
     }
 
-    final confirmed =
-        await showSaveConfirmation();
+    final confirmed = await showSaveConfirmation();
 
     if (!confirmed || !mounted) {
       return;
@@ -1161,197 +1065,119 @@ class _ProfileFormPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Profil Mahasiswa',
-        ),
+        title: const Text('Profil Mahasiswa'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-
-      // =================================================
-      // TAHAP 6 & KASUS C
-      // =================================================
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 '$studentId - $studentName',
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Form Profil Mahasiswa',
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Nama',
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 8),
-
               TextFormField(
-                controller:
-                    nameController,
-                decoration:
-                    const InputDecoration(
+                controller: nameController,
+                decoration: const InputDecoration(
                   labelText: 'Nama',
-                  hintText:
-                      'Masukkan nama',
-                  border:
-                      OutlineInputBorder(),
+                  hintText: 'Masukkan nama',
+                  border: OutlineInputBorder(),
                 ),
-                validator:
-                    validateName,
+                validator: validateName,
               ),
-
               const SizedBox(height: 16),
-
               const Text(
                 'Email',
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 8),
-
               TextFormField(
-                controller:
-                    emailController,
-                keyboardType:
-                    TextInputType.emailAddress,
-                decoration:
-                    const InputDecoration(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
                   labelText: 'Email',
-                  hintText:
-                      'Masukkan email',
-                  border:
-                      OutlineInputBorder(),
+                  hintText: 'Masukkan email',
+                  border: OutlineInputBorder(),
                 ),
-                validator:
-                    validateEmail,
+                validator: validateEmail,
               ),
-
               const SizedBox(height: 16),
-
               const Text(
                 'Alamat',
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 8),
-
               TextFormField(
-                controller:
-                    addressController,
+                controller: addressController,
                 maxLines: 4,
-                decoration:
-                    const InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Alamat',
-                  hintText:
-                      'Masukkan alamat',
-                  border:
-                      OutlineInputBorder(),
+                  hintText: 'Masukkan alamat',
+                  border: OutlineInputBorder(),
                 ),
-                validator:
-                    validateAddress,
+                validator: validateAddress,
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Informasi Tambahan',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 12),
-
               const Text(
                 'Program Studi: '
                 'Teknologi Rekayasa Perangkat Lunak',
               ),
-
               const SizedBox(height: 12),
-
-              const Text(
-                'Universitas Pendidikan Ganesha',
-              ),
-
+              const Text('Universitas Pendidikan Ganesha'),
               const SizedBox(height: 12),
-
-              const Text(
-                'Semester: 5',
-              ),
-
+              const Text('Semester: 5'),
               const SizedBox(height: 20),
-
-              // =================================================
-              // TAHAP 14
-              // =================================================
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed:
-                      isLoading
-                          ? null
-                          : saveForm,
+                  onPressed: isLoading ? null : saveForm,
                   child: isLoading
                       ? const Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             SizedBox(
                               width: 20,
                               height: 20,
-                              child:
-                                  CircularProgressIndicator(
+                              child: CircularProgressIndicator(
                                 strokeWidth: 2,
                               ),
                             ),
                             SizedBox(width: 12),
-                            Text(
-                              'Menyimpan...',
-                            ),
+                            Text('Menyimpan...'),
                           ],
                         )
-                      : const Text(
-                          'Simpan Profil',
-                        ),
+                      : const Text('Simpan Profil'),
                 ),
               ),
-
             ],
           ),
         ),
