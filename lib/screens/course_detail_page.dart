@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/course.dart';
+import '../providers/course_provider.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
 const String studentId = '2455011005';
@@ -35,12 +37,18 @@ class CourseDetailPage extends StatelessWidget {
           children: [
             const Text(
               '$studentId - $studentName',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 24),
             const Text(
               'Detail Course',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 20),
             Card(
@@ -68,25 +76,54 @@ class CourseDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            Consumer<CourseState>(
+              builder: (context, courseState, child) {
+                final isFavorite =
+                    courseState.isFavorite(course.code);
+
+                return Card(
+                  child: ListTile(
+                    leading: Icon(
+                      isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : null,
+                    ),
+                    title: Text(
+                      isFavorite
+                          ? 'Mata kuliah favorit'
+                          : 'Belum menjadi favorit',
+                    ),
+                    trailing: IconButton(
+                      tooltip: isFavorite
+                          ? 'Hapus favorit'
+                          : 'Tambah favorit',
+                      onPressed: () {
+                        courseState.toggleFavorite(course.code);
+                      },
+                      icon: Icon(
+                        isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
             const Text(
               'Informasi Mahasiswa',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             const Text('Nama: $studentName'),
             const SizedBox(height: 8),
             const Text('NIM: $studentId'),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child: const Text('Pilih/Favorite'),
-              ),
-            ),
-            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(

@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import 'favorites_page.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
 const String studentId = '2455011005';
@@ -65,9 +67,22 @@ class _DashboardPageState extends State<DashboardPage> {
         });
       },
       destinations: const [
-        NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-        NavigationDestination(icon: Icon(Icons.school), label: 'Courses'),
-        NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
+        NavigationDestination(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.school),
+          label: 'Courses',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.favorite),
+          label: 'Favorites',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person),
+          label: 'Profile',
+        ),
       ],
     );
   }
@@ -81,10 +96,17 @@ class _DashboardPageState extends State<DashboardPage> {
         });
       },
       destinations: const [
-        NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
+        NavigationRailDestination(
+          icon: Icon(Icons.home),
+          label: Text('Home'),
+        ),
         NavigationRailDestination(
           icon: Icon(Icons.school),
           label: Text('Courses'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.favorite),
+          label: Text('Favorites'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.person),
@@ -110,8 +132,11 @@ class _DashboardPageState extends State<DashboardPage> {
         child: FutureBuilder<Map<String, dynamic>>(
           future: studentFuture,
           builder: (context, studentSnapshot) {
-            if (studentSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+            if (studentSnapshot.connectionState ==
+                ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
             }
 
             if (studentSnapshot.hasError) {
@@ -134,12 +159,15 @@ class _DashboardPageState extends State<DashboardPage> {
             }
 
             final data = studentSnapshot.data!;
-            final student = Map<String, dynamic>.from(data['student'] as Map);
+            final student =
+                Map<String, dynamic>.from(data['student'] as Map);
 
             return Consumer<CourseProvider>(
               builder: (context, courseProvider, child) {
                 if (courseProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
                 }
 
                 if (courseProvider.error != null) {
@@ -170,7 +198,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: () {
-                              context.read<CourseProvider>().loadCourses();
+                              context
+                                  .read<CourseProvider>()
+                                  .loadCourses();
                             },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Coba Lagi'),
@@ -183,7 +213,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
                 if (courseProvider.courses.isEmpty) {
                   return const Center(
-                    child: Text('Data mata kuliah tidak tersedia.'),
+                    child: Text(
+                      'Data mata kuliah tidak tersedia.',
+                    ),
                   );
                 }
 
@@ -196,9 +228,15 @@ class _DashboardPageState extends State<DashboardPage> {
                     courses: courses,
                   );
                 } else if (currentIndex == 1) {
-                  currentPage = _buildCoursesPage(courses: courses);
+                  currentPage = _buildCoursesPage(
+                    courses: courses,
+                  );
+                } else if (currentIndex == 2) {
+                  currentPage = const FavoritesPage();
                 } else {
-                  currentPage = _buildProfilePage(student: student);
+                  currentPage = _buildProfilePage(
+                    student: student,
+                  );
                 }
 
                 return LayoutBuilder(
@@ -257,7 +295,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   const Text(
                     'Demo ValueNotifier',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -307,7 +348,10 @@ class _DashboardPageState extends State<DashboardPage> {
             builder: (context, courseState, child) {
               return Card(
                 child: ListTile(
-                  leading: const Icon(Icons.favorite, color: Colors.red),
+                  leading: const Icon(
+                    Icons.favorite,
+                    color: Colors.red,
+                  ),
                   title: const Text('Mata Kuliah Favorit'),
                   subtitle: const Text(
                     'Jumlah mata kuliah yang ditandai favorit',
@@ -319,6 +363,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  onTap: () {
+                    setState(() {
+                      currentIndex = 2;
+                    });
+                  },
                 ),
               );
             },
@@ -326,7 +375,10 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 20),
           const Text(
             'Ringkasan Pembelajaran',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -356,7 +408,10 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               const Text(
                 'Mata Kuliah',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -377,7 +432,9 @@ class _DashboardPageState extends State<DashboardPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const ProfileFormPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileFormPage(),
+                  ),
                 );
               },
               icon: const Icon(Icons.edit_outlined),
@@ -389,7 +446,9 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildCoursesPage({required List<Course> courses}) {
+  Widget _buildCoursesPage({
+    required List<Course> courses,
+  }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -397,10 +456,15 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           const Text(
             'Mata Kuliah',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text('Lihat detail dan tandai mata kuliah favorit.'),
+          const Text(
+            'Lihat detail dan tandai mata kuliah favorit.',
+          ),
           Consumer<CourseState>(
             builder: (context, courseState, child) {
               return Padding(
@@ -422,7 +486,10 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildCourseGrid(List<Course> courses, String prefix) {
+  Widget _buildCourseGrid(
+    List<Course> courses,
+    String prefix,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return GridView.builder(
@@ -432,14 +499,14 @@ class _DashboardPageState extends State<DashboardPage> {
             crossAxisCount: columnsFor(constraints.maxWidth),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: constraints.maxWidth < 600 ? 1.55 : 1.35,
+            childAspectRatio:
+                constraints.maxWidth < 600 ? 1.55 : 1.35,
           ),
           itemCount: courses.length,
           itemBuilder: (context, index) {
             final course = courses[index];
-            final isFavorite = context.watch<CourseState>().isFavorite(
-              course.code,
-            );
+            final isFavorite =
+                context.watch<CourseState>().isFavorite(course.code);
 
             return CourseCard(
               key: ValueKey('${prefix}_${course.code}'),
@@ -452,7 +519,9 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildProfilePage({required Map<String, dynamic> student}) {
+  Widget _buildProfilePage({
+    required Map<String, dynamic> student,
+  }) {
     final name = student['name']?.toString() ?? studentName;
     final nim = student['nim']?.toString() ?? studentId;
     final semester = student['semester']?.toString() ?? 'Semester 5';
@@ -464,7 +533,10 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           const Text(
             'Profil Mahasiswa',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 20),
           ProfileCard(student: student),
@@ -477,12 +549,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   const Text(
                     'Informasi Mahasiswa',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _profileInfoRow(Icons.badge_outlined, 'Nama', name),
                   _profileInfoRow(Icons.numbers, 'NIM', nim),
-                  _profileInfoRow(Icons.school_outlined, 'Semester', semester),
+                  _profileInfoRow(
+                    Icons.school_outlined,
+                    'Semester',
+                    semester,
+                  ),
                   _profileInfoRow(
                     Icons.account_balance_outlined,
                     'Program Studi',
@@ -504,7 +583,9 @@ class _DashboardPageState extends State<DashboardPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const ProfileFormPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileFormPage(),
+                  ),
                 );
               },
               icon: const Icon(Icons.edit_outlined),
@@ -516,7 +597,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _profileInfoRow(IconData icon, String label, String value) {
+  Widget _profileInfoRow(
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -541,7 +626,10 @@ class _DashboardPageState extends State<DashboardPage> {
 class ProfileCard extends StatelessWidget {
   final Map<String, dynamic> student;
 
-  const ProfileCard({super.key, required this.student});
+  const ProfileCard({
+    super.key,
+    required this.student,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -559,7 +647,11 @@ class ProfileCard extends StatelessWidget {
             const CircleAvatar(
               radius: 35,
               backgroundColor: Colors.blue,
-              child: Icon(Icons.person, size: 40, color: Colors.white),
+              child: Icon(
+                Icons.person,
+                size: 40,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -576,7 +668,10 @@ class ProfileCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text('NIM: $nim'),
                   const SizedBox(height: 5),
-                  Text(semester, style: TextStyle(color: Colors.blue.shade800)),
+                  Text(
+                    semester,
+                    style: TextStyle(color: Colors.blue.shade800),
+                  ),
                 ],
               ),
             ),
@@ -606,14 +701,20 @@ class SummaryCard extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 8,
+        ),
         child: Column(
           children: [
             Icon(icon, size: 30, color: color),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -639,7 +740,6 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
   final _formKey = GlobalKey<FormState>();
 
   final nameController = TextEditingController(text: studentName);
-
   final emailController = TextEditingController();
   final addressController = TextEditingController();
 
@@ -724,9 +824,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
       isLoading = false;
     });
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Data berhasil disimpan')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data berhasil disimpan')),
+    );
   }
 
   Future<void> saveForm() async {
@@ -760,15 +860,24 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
             children: [
               const Text(
                 '$studentId - $studentName',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               const Text(
                 'Form Profil Mahasiswa',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
-              const Text('Nama', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Nama',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: nameController,
@@ -814,7 +923,10 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
               const SizedBox(height: 20),
               const Text(
                 'Informasi Tambahan',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -837,7 +949,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                             SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             ),
                             SizedBox(width: 12),
                             Text('Menyimpan...'),

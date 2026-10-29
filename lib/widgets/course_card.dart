@@ -9,7 +9,11 @@ class CourseCard extends StatelessWidget {
   final Course course;
   final bool isFavorite;
 
-  const CourseCard({super.key, required this.course, required this.isFavorite});
+  const CourseCard({
+    super.key,
+    required this.course,
+    required this.isFavorite,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,21 +44,13 @@ class CourseCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final result = await Navigator.push<bool>(
+        onTap: () {
+          Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => CourseDetailPage(course: course)),
+            MaterialPageRoute(
+              builder: (_) => CourseDetailPage(course: course),
+            ),
           );
-
-          if (!context.mounted) return;
-
-          if (result == true) {
-            context.read<CourseState>().addFavorite(code);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Course berhasil dipilih')),
-            );
-          }
         },
         onLongPress: () {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -95,23 +91,25 @@ class CourseCard extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  final wasFavorite = isFavorite;
-
                   context.read<CourseState>().toggleFavorite(code);
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        wasFavorite
-                            ? 'Course dihapus dari favorite'
-                            : 'Course ditambahkan ke favorite',
+                        isFavorite
+                            ? 'Course dihapus dari favorit'
+                            : 'Course ditambahkan ke favorit',
                       ),
                     ),
                   );
                 },
-                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                ),
                 color: isFavorite ? Colors.red : null,
-                tooltip: isFavorite ? 'Hapus favorite' : 'Tambah favorite',
+                tooltip: isFavorite
+                    ? 'Hapus favorit'
+                    : 'Tambah favorit',
               ),
             ],
           ),
