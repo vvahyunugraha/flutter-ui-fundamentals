@@ -1,4 +1,3 @@
-
 class Course {
   final String code;
   final String title;

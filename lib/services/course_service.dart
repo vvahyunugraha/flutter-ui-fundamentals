@@ -1,7 +1,7 @@
-
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+
 import '../models/course.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
@@ -18,11 +18,7 @@ class CourseService {
     final list = data['courses'] as List<dynamic>;
 
     return list
-        .map(
-          (e) => Course.fromJson(
-            Map<String, dynamic>.from(e as Map),
-          ),
-        )
+        .map((item) => Course.fromJson(Map<String, dynamic>.from(item as Map)))
         .toList();
   }
 }
