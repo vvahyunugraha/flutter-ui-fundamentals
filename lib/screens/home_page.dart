@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import '../widgets/error_view.dart';
 import 'favorites_page.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
@@ -143,10 +144,38 @@ class _DashboardPageState extends State<DashboardPage> {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Gagal memuat data mahasiswa:\n'
-                    '${studentSnapshot.error}',
-                    textAlign: TextAlign.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        studentName,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text('NIM: $studentId'),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Gagal memuat data mahasiswa.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${studentSnapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            studentFuture = loadStudentData();
+                          });
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Coba Lagi'),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -164,38 +193,50 @@ class _DashboardPageState extends State<DashboardPage> {
 
             return Consumer<CourseProvider>(
               builder: (context, courseProvider, child) {
+                // LOADING STATE
                 if (courseProvider.isLoading) {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
                 }
 
+                // ERROR STATE
                 if (courseProvider.error != null) {
+                  return ErrorView(
+                    message: courseProvider.error!,
+                    onRetry: () {
+                      context.read<CourseProvider>().loadCourses();
+                    },
+                  );
+                }
+
+                // EMPTY STATE
+                if (courseProvider.courses.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Text(
+                            studentName,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Text('NIM: $studentId'),
+                          const SizedBox(height: 16),
                           const Icon(
-                            Icons.error_outline,
-                            color: Colors.red,
+                            Icons.menu_book_outlined,
                             size: 40,
                           ),
                           const SizedBox(height: 12),
                           const Text(
-                            'Gagal memuat mata kuliah.',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            courseProvider.error!,
+                            'Data course belum tersedia.',
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           ElevatedButton.icon(
                             onPressed: () {
                               context
@@ -203,7 +244,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   .loadCourses();
                             },
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Coba Lagi'),
+                            label: const Text('Muat Ulang'),
                           ),
                         ],
                       ),
@@ -211,14 +252,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   );
                 }
 
-                if (courseProvider.courses.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Data mata kuliah tidak tersedia.',
-                    ),
-                  );
-                }
-
+                // SUCCESS STATE
                 final courses = courseProvider.courses;
                 late Widget currentPage;
 
