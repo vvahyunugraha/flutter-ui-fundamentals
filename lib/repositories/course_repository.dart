@@ -1,16 +1,17 @@
+
 import '../models/course.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// Tahap 10: Repository Pattern
+// WO Pertemuan 7 Tahap 4: Repository Pattern
 
 class CourseRepository {
-  final CourseService service;
+  final CourseApiService service;
 
   CourseRepository(this.service);
 
   Future<List<Course>> getCourses() {
-    return service.loadCourses();
+    return service.getCourses();
   }
 }
