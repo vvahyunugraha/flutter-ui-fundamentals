@@ -1,17 +1,39 @@
-# flutter_ui_fundamentals
+# Flutter UI Fundamentals
 
-A new Flutter project.
+Project Flutter untuk pembelajaran Workshop Pengembangan Aplikasi Mobile.
 
-## Getting Started
+## WO 7 — Tahap 1: Membaca REST Endpoint dan JSON
 
-This project is a starting point for a Flutter application.
+### 1. Informasi Endpoint
 
-A few resources to get you started if this is your first Flutter project:
+- **URL:** https://jsonplaceholder.typicode.com/posts/1
+- **HTTP Method:** GET
+- **Status Code:** 200 OK (jika request berhasil)
+- **Resource:** posts
+- **Response Format:** JSON
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 2. Contoh Response JSON
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```json
+{
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati",
+  "body": "quia et suscipit suscipit recusandae"
+}
+```
+
+### 3. Struktur JSON
+
+| Field | Keterangan |
+|---|---|
+| `userId` | ID pengguna yang membuat post |
+| `id` | ID post |
+| `title` | Judul post |
+| `body` | Isi atau konten post |
+
+### 4. Catatan Praktikum
+
+HTTP method GET digunakan untuk meminta data dari REST endpoint. Response yang diterima berbentuk JSON dan memiliki empat field, yaitu `userId`, `id`, `title`, dan `body`. Status code digunakan untuk mengetahui hasil request, sedangkan response body berisi data yang dikirim oleh server.
+
+JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan data pada layanan ini tidak tersimpan secara permanen.
