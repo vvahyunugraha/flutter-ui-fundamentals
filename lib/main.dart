@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
+import 'models/course.dart';
+import 'models/course_test_data.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
@@ -17,7 +19,6 @@ const String apiUrl = 'https://jsonplaceholder.typicode.com/posts';
 Future<List<dynamic>> fetchCourses() async {
   final response = await http.get(Uri.parse(apiUrl));
 
-  // Periksa status code sebelum memproses JSON.
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body) as List<dynamic>;
 
@@ -30,8 +31,28 @@ Future<List<dynamic>> fetchCourses() async {
   throw Exception('HTTP ${response.statusCode}');
 }
 
+// Pengujian JSON mapping untuk WO 7 Tahap 3.
+void testCourseJsonMapping() {
+  final courses = sampleCourseJson
+      .map((json) => Course.fromJson(json))
+      .toList();
+
+  debugPrint('Jumlah mata kuliah hasil mapping: ${courses.length}');
+
+  for (final course in courses) {
+    debugPrint(
+      '${course.code} | ${course.title} | ${course.status}',
+    );
+  }
+
+  debugPrint('Hasil toJson: ${courses.first.toJson()}');
+}
+
 void main() {
-  // Jalankan pengujian GET ketika aplikasi dimulai.
+  // Pengujian JSON mapping Tahap 3.
+  testCourseJsonMapping();
+
+  // Pengujian GET dari Tahap 2 tetap dipertahankan.
   fetchCourses().catchError((Object error) {
     debugPrint('GET gagal: $error');
     return <dynamic>[];
