@@ -1,4 +1,8 @@
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'providers/course_provider.dart';
@@ -6,7 +10,33 @@ import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
 import 'services/course_service.dart';
 
+// Endpoint latihan untuk mengambil daftar data melalui HTTP GET.
+const String apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
+// Fungsi sementara untuk pengujian HTTP GET pada WO 7 Tahap 2.
+Future<List<dynamic>> fetchCourses() async {
+  final response = await http.get(Uri.parse(apiUrl));
+
+  // Periksa status code sebelum memproses JSON.
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body) as List<dynamic>;
+
+    debugPrint('GET berhasil');
+    debugPrint('Jumlah item: ${data.length}');
+
+    return data;
+  }
+
+  throw Exception('HTTP ${response.statusCode}');
+}
+
 void main() {
+  // Jalankan pengujian GET ketika aplikasi dimulai.
+  fetchCourses().catchError((Object error) {
+    debugPrint('GET gagal: $error');
+    return <dynamic>[];
+  });
+
   runApp(
     MultiProvider(
       providers: [
