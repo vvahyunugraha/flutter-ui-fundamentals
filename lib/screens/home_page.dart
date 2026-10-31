@@ -9,6 +9,7 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
+import '../pages/course_form_page.dart';
 import 'favorites_page.dart';
 
 const String studentName = 'I Gusti Made Wahyu Nugraha';
@@ -57,6 +58,24 @@ class _DashboardPageState extends State<DashboardPage> {
   void dispose() {
     counter.dispose();
     super.dispose();
+  }
+
+  Future<void> _openCourseForm() async {
+    final provider = context.read<CourseProvider>();
+
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseFormPage(
+          provider: provider,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+
+    // CourseProvider.createCourse() sudah memanggil loadCourses()
+    // setelah POST berhasil. Tidak perlu memuat ulang dua kali.
   }
 
   Widget buildNavigationBar() {
@@ -245,6 +264,12 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Muat Ulang'),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: _openCourseForm,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Tambah Course'),
                           ),
                         ],
                       ),
@@ -513,6 +538,18 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             },
           ),
+          const SizedBox(height: 16),
+
+          // Tombol untuk membuka form HTTP POST.
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openCourseForm,
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah Course'),
+            ),
+          ),
+
           const SizedBox(height: 16),
           _buildCourseGrid(courses, 'courses'),
         ],

@@ -8,7 +8,7 @@ import '../models/course.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 4: REST API Service Layer
+// WO Pertemuan 7 Tahap 6: HTTP POST
 
 class CourseApiService {
   CourseApiService({
@@ -46,5 +46,27 @@ class CourseApiService {
         status: 'planned',
       );
     }).toList();
+  }
+
+  Future<Course> createCourse(Course course) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/posts'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(course.toJson()),
+    );
+
+    if (response.statusCode == 200 ||
+        response.statusCode == 201) {
+      return Course.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw Exception(
+      'Gagal membuat course. '
+      'HTTP ${response.statusCode}',
+    );
   }
 }

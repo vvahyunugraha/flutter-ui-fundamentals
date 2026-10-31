@@ -1,9 +1,10 @@
+
 import 'package:flutter/foundation.dart';
 
 import '../models/course.dart';
 import '../repositories/course_repository.dart';
 
-// Tahap 7: State untuk mata kuliah favorit.
+// State untuk mata kuliah favorit.
 class CourseState extends ChangeNotifier {
   final Set<String> favorites = <String>{};
 
@@ -27,7 +28,7 @@ class CourseState extends ChangeNotifier {
   }
 }
 
-// Tahap 11: Async state loading, success, dan error.
+// State loading, success, error, dan penyimpanan course.
 class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;
 
@@ -35,6 +36,7 @@ class CourseProvider extends ChangeNotifier {
 
   List<Course> courses = [];
   bool isLoading = false;
+  bool isSaving = false;
   String? error;
 
   Future<void> loadCourses() async {
@@ -48,6 +50,26 @@ class CourseProvider extends ChangeNotifier {
       error = e.toString();
     } finally {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Course> createCourse(Course course) async {
+    if (isSaving) {
+      throw Exception('Penyimpanan course sedang berlangsung.');
+    }
+
+    isSaving = true;
+    notifyListeners();
+
+    try {
+      final createdCourse = await repository.createCourse(course);
+
+      await loadCourses();
+
+      return createdCourse;
+    } finally {
+      isSaving = false;
       notifyListeners();
     }
   }
