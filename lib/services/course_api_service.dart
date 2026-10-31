@@ -8,7 +8,7 @@ import '../models/course.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 7: HTTP PUT/PATCH
+// WO Pertemuan 7 Tahap 8: HTTP DELETE
 
 class CourseApiService {
   CourseApiService({
@@ -101,5 +101,23 @@ class CourseApiService {
       'Gagal memperbarui course. '
       'HTTP ${response.statusCode}',
     );
+  }
+
+  // DELETE: Menghapus course berdasarkan ID.
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/posts/$id'),
+    );
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300) {
+      throw Exception(
+        'Gagal menghapus course. '
+        'HTTP ${response.statusCode}',
+      );
+    }
+
+    debugPrint('DELETE berhasil');
+    debugPrint('Course ID: $id');
   }
 }

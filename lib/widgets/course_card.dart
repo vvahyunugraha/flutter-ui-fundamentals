@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +15,72 @@ class CourseCard extends StatelessWidget {
     required this.course,
     required this.isFavorite,
   });
+
+  // Menampilkan konfirmasi sebelum menghapus course.
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus Course?'),
+          content: Text(
+            'Apakah kamu yakin ingin menghapus '
+            '"${course.title}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    try {
+      // Menghapus course melalui CourseProvider.
+      await context.read<CourseProvider>().deleteCourse(
+            course.id!,
+          );
+
+      if (!context.mounted) return;
+
+      // Menghapus course dari daftar favorit.
+      context.read<CourseState>().removeFavorite(course.code);
+
+      // Menampilkan pemberitahuan setelah berhasil.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Course "${course.title}" berhasil dihapus',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus course: $e'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +121,9 @@ class CourseCard extends StatelessWidget {
         },
         onLongPress: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Course: $title\nKode: $code')),
+            SnackBar(
+              content: Text('Course: $title\nKode: $code'),
+            ),
           );
         },
         child: Padding(
@@ -89,27 +158,44 @@ class CourseCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  context.read<CourseState>().toggleFavorite(code);
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      context
+                          .read<CourseState>()
+                          .toggleFavorite(code);
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isFavorite
-                            ? 'Course dihapus dari favorit'
-                            : 'Course ditambahkan ke favorit',
-                      ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isFavorite
+                                ? 'Course dihapus dari favorit'
+                                : 'Course ditambahkan ke favorit',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Icon(
+                      isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
                     ),
-                  );
-                },
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                ),
-                color: isFavorite ? Colors.red : null,
-                tooltip: isFavorite
-                    ? 'Hapus favorit'
-                    : 'Tambah favorit',
+                    color: isFavorite ? Colors.red : null,
+                    tooltip: isFavorite
+                        ? 'Hapus favorit'
+                        : 'Tambah favorit',
+                  ),
+                  IconButton(
+                    onPressed: course.id == null
+                        ? null
+                        : () => _confirmDelete(context),
+                    icon: const Icon(Icons.delete_outline),
+                    color: Colors.red,
+                    tooltip: 'Hapus course',
+                  ),
+                ],
               ),
             ],
           ),

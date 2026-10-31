@@ -4,7 +4,7 @@ import '../services/course_api_service.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 7: Repository Pattern
+// WO Pertemuan 7 Tahap 8: HTTP DELETE
 
 class CourseRepository {
   final CourseApiService service;
@@ -27,5 +27,10 @@ class CourseRepository {
     Course course,
   ) {
     return service.updateCourse(id, course);
+  }
+
+  // DELETE: Menghapus course berdasarkan ID.
+  Future<void> deleteCourse(int id) {
+    return service.deleteCourse(id);
   }
 }

@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import '../models/course.dart';
 import '../repositories/course_repository.dart';
 
+// Nama: I Gusti Made Wahyu Nugraha
+// NIM: 2455011005
+// WO Pertemuan 7 Tahap 8: HTTP DELETE
+
 // State untuk mata kuliah favorit.
 class CourseState extends ChangeNotifier {
   final Set<String> favorites = <String>{};
@@ -25,6 +29,13 @@ class CourseState extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // Menghapus course dari daftar favorit.
+  void removeFavorite(String code) {
+    if (favorites.remove(code)) {
+      notifyListeners();
+    }
   }
 }
 
@@ -72,7 +83,6 @@ class CourseProvider extends ChangeNotifier {
       final createdCourse =
           await repository.createCourse(course);
 
-      // Memperbarui daftar course di aplikasi.
       if (createdCourse.id != null) {
         final index = courses.indexWhere(
           (item) => item.id == createdCourse.id,
@@ -113,11 +123,9 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Mengirim permintaan PUT melalui Repository.
       final updatedCourse =
           await repository.updateCourse(id, course);
 
-      // Memperbarui course yang sesuai di daftar lokal.
       final index = courses.indexWhere(
         (item) => item.id == id,
       );
@@ -130,6 +138,38 @@ class CourseProvider extends ChangeNotifier {
       notifyListeners();
 
       return updatedCourse;
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // DELETE: Menghapus course dari API dan daftar lokal.
+  Future<void> deleteCourse(int id) async {
+    if (isSaving) {
+      throw Exception(
+        'Proses penyimpanan atau penghapusan course '
+        'sedang berlangsung.',
+      );
+    }
+
+    isSaving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      // Hapus melalui API terlebih dahulu.
+      await repository.deleteCourse(id);
+
+      // Hapus dari daftar lokal setelah API berhasil.
+      courses = courses
+          .where((course) => course.id != id)
+          .toList();
+
+      notifyListeners();
     } catch (e) {
       error = e.toString();
       rethrow;
