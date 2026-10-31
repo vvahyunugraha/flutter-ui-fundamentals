@@ -35,10 +35,12 @@ class CourseProvider extends ChangeNotifier {
   CourseProvider(this.repository);
 
   List<Course> courses = [];
+
   bool isLoading = false;
   bool isSaving = false;
   String? error;
 
+  // GET: Memuat daftar course.
   Future<void> loadCourses() async {
     isLoading = true;
     error = null;
@@ -54,20 +56,83 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
+  // POST: Membuat course baru.
   Future<Course> createCourse(Course course) async {
     if (isSaving) {
-      throw Exception('Penyimpanan course sedang berlangsung.');
+      throw Exception(
+        'Penyimpanan course sedang berlangsung.',
+      );
     }
 
     isSaving = true;
+    error = null;
     notifyListeners();
 
     try {
-      final createdCourse = await repository.createCourse(course);
+      final createdCourse =
+          await repository.createCourse(course);
 
-      await loadCourses();
+      // Memperbarui daftar course di aplikasi.
+      if (createdCourse.id != null) {
+        final index = courses.indexWhere(
+          (item) => item.id == createdCourse.id,
+        );
+
+        if (index == -1) {
+          courses = [...courses, createdCourse];
+        } else {
+          courses[index] = createdCourse;
+        }
+
+        notifyListeners();
+      }
 
       return createdCourse;
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // PUT: Memperbarui course yang sudah ada.
+  Future<Course> updateCourse(
+    int id,
+    Course course,
+  ) async {
+    if (isSaving) {
+      throw Exception(
+        'Penyimpanan course sedang berlangsung.',
+      );
+    }
+
+    isSaving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      // Mengirim permintaan PUT melalui Repository.
+      final updatedCourse =
+          await repository.updateCourse(id, course);
+
+      // Memperbarui course yang sesuai di daftar lokal.
+      final index = courses.indexWhere(
+        (item) => item.id == id,
+      );
+
+      if (index != -1) {
+        courses[index] = updatedCourse;
+        courses = List<Course>.from(courses);
+      }
+
+      notifyListeners();
+
+      return updatedCourse;
+    } catch (e) {
+      error = e.toString();
+      rethrow;
     } finally {
       isSaving = false;
       notifyListeners();

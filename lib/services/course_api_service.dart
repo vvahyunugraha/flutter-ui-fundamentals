@@ -8,7 +8,7 @@ import '../models/course.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 6: HTTP POST
+// WO Pertemuan 7 Tahap 7: HTTP PUT/PATCH
 
 class CourseApiService {
   CourseApiService({
@@ -17,6 +17,7 @@ class CourseApiService {
 
   final String baseUrl;
 
+  // GET: Mengambil daftar course.
   Future<List<Course>> getCourses() async {
     final response = await http.get(
       Uri.parse('$baseUrl/posts'),
@@ -48,6 +49,7 @@ class CourseApiService {
     }).toList();
   }
 
+  // POST: Membuat course baru.
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -59,6 +61,8 @@ class CourseApiService {
 
     if (response.statusCode == 200 ||
         response.statusCode == 201) {
+      debugPrint('POST berhasil');
+
       return Course.fromJson(
         jsonDecode(response.body) as Map<String, dynamic>,
       );
@@ -66,6 +70,35 @@ class CourseApiService {
 
     throw Exception(
       'Gagal membuat course. '
+      'HTTP ${response.statusCode}',
+    );
+  }
+
+  // PUT: Memperbarui course berdasarkan ID.
+  Future<Course> updateCourse(
+    int id,
+    Course course,
+  ) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/posts/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(course.toJson()),
+    );
+
+    if (response.statusCode >= 200 &&
+        response.statusCode < 300) {
+      debugPrint('PUT berhasil');
+      debugPrint('Course ID: $id');
+
+      return Course.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw Exception(
+      'Gagal memperbarui course. '
       'HTTP ${response.statusCode}',
     );
   }
