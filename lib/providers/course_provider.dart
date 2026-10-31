@@ -6,9 +6,8 @@ import '../repositories/course_repository.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 8: HTTP DELETE
+// WO Pertemuan 7 Tahap 9
 
-// State untuk mata kuliah favorit.
 class CourseState extends ChangeNotifier {
   final Set<String> favorites = <String>{};
 
@@ -31,7 +30,6 @@ class CourseState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Menghapus course dari daftar favorit.
   void removeFavorite(String code) {
     if (favorites.remove(code)) {
       notifyListeners();
@@ -39,7 +37,6 @@ class CourseState extends ChangeNotifier {
   }
 }
 
-// State loading, success, error, dan penyimpanan course.
 class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;
 
@@ -51,7 +48,6 @@ class CourseProvider extends ChangeNotifier {
   bool isSaving = false;
   String? error;
 
-  // GET: Memuat daftar course.
   Future<void> loadCourses() async {
     isLoading = true;
     error = null;
@@ -67,7 +63,6 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // POST: Membuat course baru.
   Future<Course> createCourse(Course course) async {
     if (isSaving) {
       throw Exception(
@@ -92,9 +87,8 @@ class CourseProvider extends ChangeNotifier {
           courses = [...courses, createdCourse];
         } else {
           courses[index] = createdCourse;
+          courses = List<Course>.from(courses);
         }
-
-        notifyListeners();
       }
 
       return createdCourse;
@@ -107,8 +101,7 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // PUT: Memperbarui course yang sudah ada.
-  Future<Course> updateCourse(
+  Future<void> updateCourse(
     int id,
     Course course,
   ) async {
@@ -123,21 +116,17 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final updatedCourse =
-          await repository.updateCourse(id, course);
+      await repository.updateCourse(id, course);
 
+      // Perbarui daftar lokal setelah request berhasil.
       final index = courses.indexWhere(
         (item) => item.id == id,
       );
 
       if (index != -1) {
-        courses[index] = updatedCourse;
+        courses[index] = course;
         courses = List<Course>.from(courses);
       }
-
-      notifyListeners();
-
-      return updatedCourse;
     } catch (e) {
       error = e.toString();
       rethrow;
@@ -147,7 +136,6 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // DELETE: Menghapus course dari API dan daftar lokal.
   Future<void> deleteCourse(int id) async {
     if (isSaving) {
       throw Exception(
@@ -161,15 +149,11 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Hapus melalui API terlebih dahulu.
       await repository.deleteCourse(id);
 
-      // Hapus dari daftar lokal setelah API berhasil.
       courses = courses
           .where((course) => course.id != id)
           .toList();
-
-      notifyListeners();
     } catch (e) {
       error = e.toString();
       rethrow;

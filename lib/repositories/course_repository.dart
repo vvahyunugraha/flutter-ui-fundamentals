@@ -1,36 +1,32 @@
 
 import '../models/course.dart';
-import '../services/course_api_service.dart';
+import '../services/course_data_source.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 8: HTTP DELETE
+// WO Pertemuan 7 Tahap 9
 
 class CourseRepository {
-  final CourseApiService service;
+  CourseRepository(this.dataSource);
 
-  CourseRepository(this.service);
+  final CourseDataSource dataSource;
 
-  // GET: Mengambil daftar course.
   Future<List<Course>> getCourses() {
-    return service.getCourses();
+    return dataSource.getCourses();
   }
 
-  // POST: Membuat course baru.
   Future<Course> createCourse(Course course) {
-    return service.createCourse(course);
+    return dataSource.createCourse(course);
   }
 
-  // PUT: Memperbarui course.
-  Future<Course> updateCourse(
+  Future<void> updateCourse(
     int id,
     Course course,
   ) {
-    return service.updateCourse(id, course);
+    return dataSource.updateCourse(id, course);
   }
 
-  // DELETE: Menghapus course berdasarkan ID.
   Future<void> deleteCourse(int id) {
-    return service.deleteCourse(id);
+    return dataSource.deleteCourse(id);
   }
 }

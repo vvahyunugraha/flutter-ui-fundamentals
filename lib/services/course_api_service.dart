@@ -5,19 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 9: Repository Pattern
+// WO Pertemuan 7 Tahap 9
 
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   CourseApiService({
     this.baseUrl = 'https://jsonplaceholder.typicode.com',
   });
 
   final String baseUrl;
 
-  // GET: Mengambil daftar course.
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(
       Uri.parse('$baseUrl/posts'),
@@ -49,7 +50,7 @@ class CourseApiService {
     }).toList();
   }
 
-  // POST: Membuat course baru.
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -74,8 +75,8 @@ class CourseApiService {
     );
   }
 
-  // PUT: Memperbarui course berdasarkan ID.
-  Future<Course> updateCourse(
+  @override
+  Future<void> updateCourse(
     int id,
     Course course,
   ) async {
@@ -87,23 +88,19 @@ class CourseApiService {
       body: jsonEncode(course.toJson()),
     );
 
-    if (response.statusCode >= 200 &&
-        response.statusCode < 300) {
-      debugPrint('PUT berhasil');
-      debugPrint('Course ID: $id');
-
-      return Course.fromJson(
-        jsonDecode(response.body) as Map<String, dynamic>,
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300) {
+      throw Exception(
+        'Gagal memperbarui course. '
+        'HTTP ${response.statusCode}',
       );
     }
 
-    throw Exception(
-      'Gagal memperbarui course. '
-      'HTTP ${response.statusCode}',
-    );
+    debugPrint('PUT berhasil');
+    debugPrint('Course ID: $id');
   }
 
-  // DELETE: Menghapus course berdasarkan ID.
+  @override
   Future<void> deleteCourse(int id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/posts/$id'),

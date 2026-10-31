@@ -4,50 +4,26 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
-import 'models/course.dart';
-import 'models/course_test_data.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
-import 'services/course_api_service.dart';
+import 'services/course_supabase_service.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-
-// Pengujian JSON mapping untuk WO 7 Tahap 3.
-void testCourseJsonMapping() {
-  final courses = sampleCourseJson
-      .map((json) => Course.fromJson(json))
-      .toList();
-
-  debugPrint(
-    'Jumlah mata kuliah hasil mapping: ${courses.length}',
-  );
-
-  for (final course in courses) {
-    debugPrint(
-      '${course.code} | ${course.title} | ${course.status}',
-    );
-  }
-
-  if (courses.isNotEmpty) {
-    debugPrint(
-      'Hasil toJson: ${courses.first.toJson()}',
-    );
-  }
-}
+// WO Pertemuan 7 Tahap 12
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Supabase untuk WO 7 Tahap 10.
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     publishableKey: SupabaseConfig.supabaseAnonKey,
   );
 
-  // Pengujian JSON mapping untuk WO 7 Tahap 3.
-  testCourseJsonMapping();
+  final repository = CourseRepository(
+    CourseSupabaseService(),
+  );
 
   runApp(
     MultiProvider(
@@ -56,11 +32,8 @@ Future<void> main() async {
           create: (_) => CourseState(),
         ),
         ChangeNotifierProvider(
-          create: (_) => CourseProvider(
-            CourseRepository(
-              CourseApiService(),
-            ),
-          ),
+          create: (_) => CourseProvider(repository)
+            ..loadCourses(),
         ),
       ],
       child: const MyApp(),
