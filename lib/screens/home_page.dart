@@ -61,22 +61,23 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _openCourseForm() async {
-    final provider = context.read<CourseProvider>();
+  final provider = context.read<CourseProvider>();
 
-    await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CourseFormPage(
-          provider: provider,
-        ),
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CourseFormPage(
+        provider: provider,
       ),
-    );
+    ),
+  );
 
-    if (!mounted) return;
+  if (!mounted) return;
 
-    // CourseProvider.createCourse() sudah memanggil loadCourses()
-    // setelah POST berhasil. Tidak perlu memuat ulang dua kali.
+  if (result == true) {
+    await provider.loadCourses();
   }
+}
 
   Widget buildNavigationBar() {
     return NavigationBar(

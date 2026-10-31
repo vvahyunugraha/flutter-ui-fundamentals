@@ -6,7 +6,7 @@ import 'course_data_source.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 12
+// WO Pertemuan 7 Tahap 13
 
 class CourseSupabaseService implements CourseDataSource {
   final supabase = Supabase.instance.client;
@@ -27,10 +27,18 @@ class CourseSupabaseService implements CourseDataSource {
         .toList();
   }
 
-  // Sementara sesuai contoh WO Tahap 12.
   @override
-  Future<Course> createCourse(Course course) =>
-      throw UnimplementedError();
+  Future<Course> createCourse(Course course) async {
+    final row = await supabase
+        .from('courses')
+        .insert(course.toJson())
+        .select()
+        .single();
+
+    return Course.fromJson(
+      Map<String, dynamic>.from(row),
+    );
+  }
 
   @override
   Future<void> updateCourse(

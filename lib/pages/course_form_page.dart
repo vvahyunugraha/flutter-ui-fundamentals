@@ -6,7 +6,7 @@ import '../providers/course_provider.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 6: Form HTTP POST
+// WO Pertemuan 7 Tahap 13: INSERT Supabase
 
 class CourseFormPage extends StatefulWidget {
   final CourseProvider provider;
@@ -56,7 +56,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Course berhasil dikirim.'),
+          content: Text('Course berhasil disimpan.'),
         ),
       );
 
@@ -97,7 +97,8 @@ class _CourseFormPageState extends State<CourseFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
+                      if (value == null ||
+                          value.trim().isEmpty) {
                         return 'Kode wajib diisi';
                       }
                       return null;
@@ -111,7 +112,8 @@ class _CourseFormPageState extends State<CourseFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
+                      if (value == null ||
+                          value.trim().isEmpty) {
                         return 'Nama mata kuliah wajib diisi';
                       }
                       return null;
@@ -126,12 +128,20 @@ class _CourseFormPageState extends State<CourseFormPage> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
+                      if (value == null ||
+                          value.trim().isEmpty) {
                         return 'Jumlah SKS wajib diisi';
                       }
 
-                      if (int.tryParse(value.trim()) == null) {
+                      final credits =
+                          int.tryParse(value.trim());
+
+                      if (credits == null) {
                         return 'Jumlah SKS harus berupa angka';
+                      }
+
+                      if (credits <= 0) {
+                        return 'Jumlah SKS harus lebih dari 0';
                       }
 
                       return null;
@@ -158,6 +168,14 @@ class _CourseFormPageState extends State<CourseFormPage> {
                         child: Text('Done'),
                       ),
                     ],
+                    validator: (value) {
+                      if (value == null ||
+                          !['planned', 'active', 'done']
+                              .contains(value)) {
+                        return 'Pilih status course';
+                      }
+                      return null;
+                    },
                     onChanged: isSaving
                         ? null
                         : (value) {
