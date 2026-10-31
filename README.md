@@ -1,39 +1,43 @@
-# Flutter UI Fundamentals
+---
 
-Project Flutter untuk pembelajaran Workshop Pengembangan Aplikasi Mobile.
+## WO 7 — Tahap 16: Mini Project Integrasi — Course Data Manager
 
-## WO 7 — Tahap 1: Membaca REST Endpoint dan JSON
+### 1. Arsitektur Aplikasi
 
-### 1. Informasi Endpoint
+Aplikasi menggunakan pemisahan tanggung jawab untuk mengelola data mata kuliah (*course*).
 
-- **URL:** https://jsonplaceholder.typicode.com/posts/1
-- **HTTP Method:** GET
-- **Status Code:** 200 OK (jika request berhasil)
-- **Resource:** posts
-- **Response Format:** JSON
-
-### 2. Contoh Response JSON
-
-```json
-{
-  "userId": 1,
-  "id": 1,
-  "title": "sunt aut facere repellat provident occaecati",
-  "body": "quia et suscipit suscipit recusandae"
-}
-```
-
-### 3. Struktur JSON
-
-| Field | Keterangan |
+| Komponen | Fungsi |
 |---|---|
-| `userId` | ID pengguna yang membuat post |
-| `id` | ID post |
-| `title` | Judul post |
-| `body` | Isi atau konten post |
+| `CourseDataSource` | Mendefinisikan kontrak operasi CRUD |
+| `CourseSupabaseService` | Menghubungkan aplikasi dengan Supabase |
+| `CourseApiService` | Menyediakan implementasi sumber data REST API |
+| `CourseRepository` | Menjadi penghubung antara provider dan sumber data |
+| `CourseProvider` | Mengelola state, data course, loading, dan error |
+| `Course` | Model data mata kuliah |
 
-### 4. Catatan Praktikum
+Supabase digunakan sebagai sumber data aktif melalui `CourseSupabaseService` yang dipilih di `main.dart`.
 
-HTTP method GET digunakan untuk meminta data dari REST endpoint. Response yang diterima berbentuk JSON dan memiliki empat field, yaitu `userId`, `id`, `title`, dan `body`. Status code digunakan untuk mengetahui hasil request, sedangkan response body berisi data yang dikirim oleh server.
+### 2. Pengujian CRUD
 
-JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan data pada layanan ini tidak tersimpan secara permanen.
+| Operasi | Hasil |
+|---|---|
+| Create | Berhasil menambahkan course baru |
+| Read | Berhasil memuat ulang data dari Supabase |
+| Update | Berhasil memperbarui course dan mempertahankan perubahan setelah pemuatan ulang |
+| Delete | Berhasil menghapus course dan memastikan data tidak muncul kembali setelah pemuatan ulang |
+
+### 3. Pengujian Error State
+
+Pengujian dilakukan menggunakan URL Supabase yang tidak valid untuk sementara. Aplikasi berhasil menampilkan `ErrorView` beserta tombol coba lagi.
+
+Setelah pengujian, URL Supabase dipulihkan ke konfigurasi asli. Verifikasi akhir dilakukan dengan memastikan aplikasi kembali dapat memuat daftar course tanpa error.
+
+### 4. Identitas Mahasiswa
+
+- **Nama:** I Gusti Made Wahyu Nugraha
+- **NIM:** 2455011005
+
+### 5. Bukti dan Git Checkpoint
+
+- Screenshot kode dan hasil aplikasi: [tambahkan setelah screenshot diambil]
+- Commit Git Tahap 16: [tambahkan hash setelah commit berhasil dibuat]
