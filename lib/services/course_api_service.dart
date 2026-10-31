@@ -8,7 +8,7 @@ import '../models/course.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 8: HTTP DELETE
+// WO Pertemuan 7 Tahap 9: Repository Pattern
 
 class CourseApiService {
   CourseApiService({
