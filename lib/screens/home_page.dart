@@ -11,7 +11,6 @@ import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
-import '../widgets/role_guard.dart';
 import '../pages/course_form_page.dart';
 import 'favorites_page.dart';
 

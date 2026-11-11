@@ -6,7 +6,7 @@ import 'course_data_source.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 13
+// WO Pertemuan 9 - Praktik 5
 
 class CourseSupabaseService implements CourseDataSource {
   final supabase = Supabase.instance.client;
@@ -29,9 +29,20 @@ class CourseSupabaseService implements CourseDataSource {
 
   @override
   Future<Course> createCourse(Course course) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('Silakan login terlebih dahulu.');
+    }
+
+    final courseData = course.toJson();
+
+    // Owner ID diambil dari akun yang sedang login.
+    courseData['owner_id'] = user.id;
+
     final row = await supabase
         .from('courses')
-        .insert(course.toJson())
+        .insert(courseData)
         .select()
         .single();
 
@@ -40,22 +51,57 @@ class CourseSupabaseService implements CourseDataSource {
     );
   }
 
- @override
-Future<void> updateCourse(
-  int id,
-  Course course,
-) async {
-  await supabase
-      .from('courses')
-      .update(course.toJson())
-      .eq('id', id);
-}
-  
-@override
-Future<void> deleteCourse(int id) async {
-  await supabase
-      .from('courses')
-      .delete()
-      .eq('id', id);
-}
+  @override
+  Future<void> updateCourse(
+    int id,
+    Course course,
+  ) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('Silakan login terlebih dahulu.');
+    }
+
+    final courseData = course.toJson();
+
+    // Jangan izinkan perubahan kepemilikan course.
+    courseData.remove('owner_id');
+
+    final result = await supabase
+        .from('courses')
+        .update(courseData)
+        .eq('id', id)
+        .eq('owner_id', user.id)
+        .select('id');
+
+    if (result.isEmpty) {
+      throw Exception(
+        'Course tidak dapat diubah. '
+        'Pastikan kamu adalah pemilik course.',
+      );
+    }
+  }
+
+  @override
+  Future<void> deleteCourse(int id) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('Silakan login terlebih dahulu.');
+    }
+
+    final result = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id)
+        .eq('owner_id', user.id)
+        .select('id');
+
+    if (result.isEmpty) {
+      throw Exception(
+        'Course tidak dapat dihapus. '
+        'Pastikan kamu adalah pemilik course.',
+      );
+    }
+  }
 }
