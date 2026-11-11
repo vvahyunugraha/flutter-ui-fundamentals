@@ -55,10 +55,17 @@ class CourseProvider extends ChangeNotifier {
 
     try {
       courses = await repository.getCourses();
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
+
+    debugPrint(
+      'BERHASIL MEMUAT COURSE: ${courses.length} data',
+    );
+  } catch (e, stackTrace) {
+    error = e.toString();
+
+    debugPrint('GAGAL MEMUAT COURSE: $e');
+    debugPrint('STACK TRACE: $stackTrace');
+  } finally {
+    isLoading = false;
       notifyListeners();
     }
   }

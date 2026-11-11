@@ -1,13 +1,14 @@
 
 import 'dart:convert';
 
-import '../services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../services/auth_service.dart';
+import '../services/profile_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
 import '../pages/course_form_page.dart';
@@ -39,6 +40,8 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
+  late Future<UserProfile?> profileFuture;
+
   int currentIndex = 0;
 
   final ValueNotifier<int> counter = ValueNotifier<int>(0);
@@ -46,7 +49,9 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+
     studentFuture = loadStudentData();
+    profileFuture = ProfileService.instance.getMyProfile();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -76,23 +81,23 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _openCourseForm() async {
-  final provider = context.read<CourseProvider>();
+    final provider = context.read<CourseProvider>();
 
-  final result = await Navigator.push<bool>(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CourseFormPage(
-        provider: provider,
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseFormPage(
+          provider: provider,
+        ),
       ),
-    ),
-  );
+    );
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  if (result == true) {
-    await provider.loadCourses();
+    if (result == true) {
+      await provider.loadCourses();
+    }
   }
-}
 
   Widget buildNavigationBar() {
     return NavigationBar(
@@ -613,6 +618,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // Halaman profil mahasiswa dan akun Supabase
   Widget _buildProfilePage({
     required Map<String, dynamic> student,
   }) {
@@ -620,74 +626,195 @@ class _DashboardPageState extends State<DashboardPage> {
     final nim = student['nim']?.toString() ?? studentId;
     final semester = student['semester']?.toString() ?? 'Semester 5';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Profil Mahasiswa',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-          ProfileCard(student: student),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Informasi Mahasiswa',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _profileInfoRow(Icons.badge_outlined, 'Nama', name),
-                  _profileInfoRow(Icons.numbers, 'NIM', nim),
-                  _profileInfoRow(
-                    Icons.school_outlined,
-                    'Semester',
-                    semester,
-                  ),
-                  _profileInfoRow(
-                    Icons.account_balance_outlined,
-                    'Program Studi',
-                    'Teknologi Rekayasa Perangkat Lunak',
-                  ),
-                  _profileInfoRow(
-                    Icons.location_city_outlined,
-                    'Universitas',
-                    'Universitas Pendidikan Ganesha',
-                  ),
-                ],
+    return FutureBuilder<UserProfile?>(
+      future: profileFuture,
+      builder: (context, profileSnapshot) {
+        String accountName = 'Belum tersedia';
+        String accountEmail = 'Belum tersedia';
+        String accountRole = 'Belum tersedia';
+
+        if (profileSnapshot.hasData && profileSnapshot.data != null) {
+          final profile = profileSnapshot.data!;
+
+          accountName = profile.name.isNotEmpty
+              ? profile.name
+              : 'Belum diisi';
+
+          accountEmail = profile.email.isNotEmpty
+              ? profile.email
+              : 'Belum tersedia';
+
+          accountRole = profile.role.isNotEmpty
+              ? profile.role[0].toUpperCase() +
+                  profile.role.substring(1)
+              : 'Belum tersedia';
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Profil Mahasiswa',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ProfileFormPage(),
+              const SizedBox(height: 20),
+              ProfileCard(student: student),
+              const SizedBox(height: 24),
+
+              // Informasi mahasiswa
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Informasi Mahasiswa',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _profileInfoRow(
+                        Icons.badge_outlined,
+                        'Nama',
+                        name,
+                      ),
+                      _profileInfoRow(
+                        Icons.numbers,
+                        'NIM',
+                        nim,
+                      ),
+                      _profileInfoRow(
+                        Icons.school_outlined,
+                        'Semester',
+                        semester,
+                      ),
+                      _profileInfoRow(
+                        Icons.account_balance_outlined,
+                        'Program Studi',
+                        'Teknologi Rekayasa Perangkat Lunak',
+                      ),
+                      _profileInfoRow(
+                        Icons.location_city_outlined,
+                        'Universitas',
+                        'Universitas Pendidikan Ganesha',
+                      ),
+                    ],
                   ),
-                );
-              },
-              icon: const Icon(Icons.edit_outlined),
-              label: const Text('Edit Profil'),
-            ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Informasi akun dari Supabase
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Informasi Akun',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      if (profileSnapshot.connectionState ==
+                          ConnectionState.waiting)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (profileSnapshot.hasError)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gagal memuat profil dari Supabase.',
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${profileSnapshot.error}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    profileFuture = ProfileService
+                                        .instance
+                                        .getMyProfile();
+                                  });
+                                },
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Coba Lagi'),
+                              ),
+                            ),
+                          ],
+                        )
+                      else if (profileSnapshot.data == null)
+                        const Text(
+                          'Data profil belum ditemukan pada tabel profiles.',
+                        )
+                      else ...[
+                        _profileInfoRow(
+                          Icons.person_outline,
+                          'Nama',
+                          accountName,
+                        ),
+                        _profileInfoRow(
+                          Icons.email_outlined,
+                          'Email',
+                          accountEmail,
+                        ),
+                        _profileInfoRow(
+                          Icons.admin_panel_settings_outlined,
+                          'Role',
+                          accountRole,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ProfileFormPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit Profil'),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
