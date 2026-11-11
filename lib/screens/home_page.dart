@@ -61,6 +61,20 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
+  Future<void> _logout() async {
+    try {
+      await AuthService.instance.logout();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal logout: $e'),
+        ),
+      );
+    }
+  }
+
   Future<void> _openCourseForm() async {
   final provider = context.read<CourseProvider>();
 
@@ -149,6 +163,13 @@ class _DashboardPageState extends State<DashboardPage> {
         centerTitle: true,
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
       ),
       body: SafeArea(
         child: FutureBuilder<Map<String, dynamic>>(
