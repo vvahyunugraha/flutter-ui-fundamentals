@@ -8,19 +8,22 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
 import 'services/course_supabase_service.dart';
+import 'pages/login_page.dart';
 
 // Nama: I Gusti Made Wahyu Nugraha
 // NIM: 2455011005
-// WO Pertemuan 7 Tahap 12
+// WO Pertemuan 9 - Authentication & Authorization
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Inisialisasi Supabase
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     publishableKey: SupabaseConfig.supabaseAnonKey,
   );
 
+  // Inisialisasi Course Repository
   final repository = CourseRepository(
     CourseSupabaseService(),
   );
@@ -55,7 +58,32 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const DashboardPage(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+// Memeriksa status autentikasi pengguna
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final supabase = Supabase.instance.client;
+
+    return StreamBuilder<AuthState>(
+      stream: supabase.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = supabase.auth.currentSession;
+
+        // Jika pengguna sudah login
+        if (session != null) {
+          return const DashboardPage();
+        }
+
+        // Jika pengguna belum login
+        return const LoginPage();
+      },
     );
   }
 }
