@@ -5,18 +5,20 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../screens/course_detail_page.dart';
+import 'role_guard.dart';
 
 class CourseCard extends StatelessWidget {
   final Course course;
   final bool isFavorite;
+  final String userRole;
 
   const CourseCard({
     super.key,
     required this.course,
     required this.isFavorite,
+    required this.userRole,
   });
 
-  // Menampilkan konfirmasi sebelum menghapus course.
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -53,17 +55,14 @@ class CourseCard extends StatelessWidget {
     }
 
     try {
-      // Menghapus course melalui CourseProvider.
       await context.read<CourseProvider>().deleteCourse(
             course.id!,
           );
 
       if (!context.mounted) return;
 
-      // Menghapus course dari daftar favorit.
       context.read<CourseState>().removeFavorite(course.code);
 
-      // Menampilkan pemberitahuan setelah berhasil.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -187,13 +186,18 @@ class CourseCard extends StatelessWidget {
                         ? 'Hapus favorit'
                         : 'Tambah favorit',
                   ),
-                  IconButton(
-                    onPressed: course.id == null
-                        ? null
-                        : () => _confirmDelete(context),
-                    icon: const Icon(Icons.delete_outline),
-                    color: Colors.red,
-                    tooltip: 'Hapus course',
+
+                  RoleGuard(
+                    role: userRole,
+                    allowed: const ['owner', 'admin'],
+                    child: IconButton(
+                      onPressed: course.id == null
+                          ? null
+                          : () => _confirmDelete(context),
+                      icon: const Icon(Icons.delete_outline),
+                      color: Colors.red,
+                      tooltip: 'Hapus course',
+                    ),
                   ),
                 ],
               ),

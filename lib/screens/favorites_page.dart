@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,7 +6,12 @@ import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 
 class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({super.key});
+  final String userRole;
+
+  const FavoritesPage({
+    super.key,
+    required this.userRole,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +64,7 @@ class FavoritesPage extends StatelessWidget {
                     course: course,
                     isFavorite:
                         courseState.isFavorite(course.code),
+                    userRole: userRole,
                   );
                 },
               );

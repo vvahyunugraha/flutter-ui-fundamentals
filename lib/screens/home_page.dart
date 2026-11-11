@@ -11,6 +11,7 @@ import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
+import '../widgets/role_guard.dart';
 import '../pages/course_form_page.dart';
 import 'favorites_page.dart';
 
@@ -42,6 +43,10 @@ class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
   late Future<UserProfile?> profileFuture;
 
+  String? currentUserRole;
+  bool isRoleLoading = true;
+  String? roleError;
+
   int currentIndex = 0;
 
   final ValueNotifier<int> counter = ValueNotifier<int>(0);
@@ -53,11 +58,46 @@ class _DashboardPageState extends State<DashboardPage> {
     studentFuture = loadStudentData();
     profileFuture = ProfileService.instance.getMyProfile();
 
+    _loadUserRole();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CourseProvider>().loadCourses();
       }
     });
+  }
+
+  Future<void> _loadUserRole() async {
+    try {
+      setState(() {
+        isRoleLoading = true;
+        roleError = null;
+      });
+
+      final profile = await ProfileService.instance.getMyProfile();
+
+      if (!mounted) return;
+
+      setState(() {
+        currentUserRole = profile?.role.trim().toLowerCase();
+        isRoleLoading = false;
+
+        if (currentUserRole == null ||
+            currentUserRole!.isEmpty) {
+          roleError = 'Role pengguna tidak ditemukan.';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        currentUserRole = null;
+        isRoleLoading = false;
+        roleError = 'Gagal mengambil role pengguna: $e';
+      });
+
+      debugPrint('Gagal mengambil role pengguna: $e');
+    }
   }
 
   @override
@@ -80,7 +120,26 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  // Hanya owner dan admin yang boleh mengelola Course.
+  bool get _canManageCourses {
+    return currentUserRole == 'owner' ||
+        currentUserRole == 'admin';
+  }
+
   Future<void> _openCourseForm() async {
+    // Pemeriksaan role dilakukan sebelum membuka halaman form.
+    if (!_canManageCourses) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Akses ditolak. Hanya Owner dan Admin '
+            'yang dapat menambahkan Course.',
+          ),
+        ),
+      );
+      return;
+    }
+
     final provider = context.read<CourseProvider>();
 
     final result = await Navigator.push<bool>(
@@ -177,174 +236,172 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       body: SafeArea(
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: studentFuture,
-          builder: (context, studentSnapshot) {
-            if (studentSnapshot.connectionState ==
-                ConnectionState.waiting) {
-              return const Center(
+        child: isRoleLoading
+            ? const Center(
                 child: CircularProgressIndicator(),
-              );
-            }
-
-            if (studentSnapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        studentName,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text('NIM: $studentId'),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Gagal memuat data mahasiswa.',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${studentSnapshot.error}',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            studentFuture = loadStudentData();
-                          });
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Coba Lagi'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            if (!studentSnapshot.hasData) {
-              return const Center(
-                child: Text('Data mahasiswa tidak tersedia.'),
-              );
-            }
-
-            final data = studentSnapshot.data!;
-            final student =
-                Map<String, dynamic>.from(data['student'] as Map);
-
-            return Consumer<CourseProvider>(
-              builder: (context, courseProvider, child) {
-                // LOADING STATE
-                if (courseProvider.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                // ERROR STATE
-                if (courseProvider.error != null) {
-                  return ErrorView(
-                    message: courseProvider.error!,
-                    onRetry: () {
-                      context.read<CourseProvider>().loadCourses();
-                    },
-                  );
-                }
-
-                // EMPTY STATE
-                if (courseProvider.courses.isEmpty) {
-                  return Center(
+              )
+            : roleError != null
+                ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            studentName,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Text('NIM: $studentId'),
-                          const SizedBox(height: 16),
                           const Icon(
-                            Icons.menu_book_outlined,
-                            size: 40,
+                            Icons.warning_amber_rounded,
+                            size: 48,
+                            color: Colors.orange,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'Data course belum tersedia.',
+                          Text(
+                            roleError!,
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              context
-                                  .read<CourseProvider>()
-                                  .loadCourses();
-                            },
+                            onPressed: _loadUserRole,
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Muat Ulang'),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: _openCourseForm,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Tambah Course'),
+                            label: const Text('Coba Lagi'),
                           ),
                         ],
                       ),
                     ),
-                  );
-                }
+                  )
+                : FutureBuilder<Map<String, dynamic>>(
+                    future: studentFuture,
+                    builder: (context, studentSnapshot) {
+                      if (studentSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
 
-                // SUCCESS STATE
-                final courses = courseProvider.courses;
-                late Widget currentPage;
+                      if (studentSnapshot.hasError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  studentName,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Text('NIM: $studentId'),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Gagal memuat data mahasiswa.',
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${studentSnapshot.error}',
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      studentFuture =
+                                          loadStudentData();
+                                    });
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Coba Lagi'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
 
-                if (currentIndex == 0) {
-                  currentPage = _buildHomePage(
-                    student: student,
-                    courses: courses,
-                  );
-                } else if (currentIndex == 1) {
-                  currentPage = _buildCoursesPage(
-                    courses: courses,
-                  );
-                } else if (currentIndex == 2) {
-                  currentPage = const FavoritesPage();
-                } else {
-                  currentPage = _buildProfilePage(
-                    student: student,
-                  );
-                }
+                      if (!studentSnapshot.hasData) {
+                        return const Center(
+                          child: Text(
+                            'Data mahasiswa tidak tersedia.',
+                          ),
+                        );
+                      }
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth < 840) {
-                      return currentPage;
-                    }
+                      final data = studentSnapshot.data!;
+                      final student =
+                          Map<String, dynamic>.from(
+                        data['student'] as Map,
+                      );
 
-                    return Row(
-                      children: [
-                        buildNavigationRail(),
-                        const VerticalDivider(width: 1),
-                        Expanded(child: currentPage),
-                      ],
-                    );
-                  },
-                );
-              },
-            );
-          },
-        ),
+                      return Consumer<CourseProvider>(
+                        builder: (context, courseProvider, child) {
+                          if (courseProvider.isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (courseProvider.error != null) {
+                            return ErrorView(
+                              message: courseProvider.error!,
+                              onRetry: () {
+                                context
+                                    .read<CourseProvider>()
+                                    .loadCourses();
+                              },
+                            );
+                          }
+
+                          final courses = courseProvider.courses;
+                          final userRole = currentUserRole!;
+
+                          late Widget currentPage;
+
+                          if (currentIndex == 0) {
+                            currentPage = _buildHomePage(
+                              student: student,
+                              courses: courses,
+                              userRole: userRole,
+                            );
+                          } else if (currentIndex == 1) {
+                            currentPage = _buildCoursesPage(
+                              courses: courses,
+                              userRole: userRole,
+                            );
+                          } else if (currentIndex == 2) {
+                            currentPage = FavoritesPage(
+                              userRole: userRole,
+                            );
+                          } else {
+                            currentPage = _buildProfilePage(
+                              student: student,
+                            );
+                          }
+
+                          if (courses.isEmpty &&
+                              currentIndex == 1) {
+                            currentPage = _buildEmptyCoursesPage();
+                          }
+
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              if (constraints.maxWidth < 840) {
+                                return currentPage;
+                              }
+
+                              return Row(
+                                children: [
+                                  buildNavigationRail(),
+                                  const VerticalDivider(width: 1),
+                                  Expanded(child: currentPage),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
       ),
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
@@ -358,9 +415,44 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  Widget _buildEmptyCoursesPage() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.menu_book_outlined,
+              size: 48,
+            ),
+            const SizedBox(height: 12),
+            const Text('Data course belum tersedia.'),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<CourseProvider>().loadCourses();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Muat Ulang'),
+            ),
+            const SizedBox(height: 8),
+            if (_canManageCourses)
+              OutlinedButton.icon(
+                onPressed: _openCourseForm,
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah Course'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHomePage({
     required Map<String, dynamic> student,
     required List<Course> courses,
+    required String userRole,
   }) {
     final totalCredits = courses.fold<int>(
       0,
@@ -511,7 +603,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildCourseGrid(courses, 'home'),
+          _buildCourseGrid(courses, 'home', userRole),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -535,6 +627,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildCoursesPage({
     required List<Course> courses,
+    required String userRole,
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -568,18 +661,19 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 16),
 
-          // Tombol untuk membuka form HTTP POST.
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _openCourseForm,
-              icon: const Icon(Icons.add),
-              label: const Text('Tambah Course'),
+          // Tombol tambah hanya untuk Owner dan Admin.
+          if (_canManageCourses)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _openCourseForm,
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah Course'),
+              ),
             ),
-          ),
 
           const SizedBox(height: 16),
-          _buildCourseGrid(courses, 'courses'),
+          _buildCourseGrid(courses, 'courses', userRole),
         ],
       ),
     );
@@ -588,6 +682,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildCourseGrid(
     List<Course> courses,
     String prefix,
+    String userRole,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -604,13 +699,16 @@ class _DashboardPageState extends State<DashboardPage> {
           itemCount: courses.length,
           itemBuilder: (context, index) {
             final course = courses[index];
-            final isFavorite =
-                context.watch<CourseState>().isFavorite(course.code);
+
+            final isFavorite = context
+                .watch<CourseState>()
+                .isFavorite(course.code);
 
             return CourseCard(
               key: ValueKey('${prefix}_${course.code}'),
               course: course,
               isFavorite: isFavorite,
+              userRole: userRole,
             );
           },
         );
@@ -618,13 +716,13 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Halaman profil mahasiswa dan akun Supabase
   Widget _buildProfilePage({
     required Map<String, dynamic> student,
   }) {
     final name = student['name']?.toString() ?? studentName;
     final nim = student['nim']?.toString() ?? studentId;
-    final semester = student['semester']?.toString() ?? 'Semester 5';
+    final semester =
+        student['semester']?.toString() ?? 'Semester 5';
 
     return FutureBuilder<UserProfile?>(
       future: profileFuture,
@@ -633,7 +731,8 @@ class _DashboardPageState extends State<DashboardPage> {
         String accountEmail = 'Belum tersedia';
         String accountRole = 'Belum tersedia';
 
-        if (profileSnapshot.hasData && profileSnapshot.data != null) {
+        if (profileSnapshot.hasData &&
+            profileSnapshot.data != null) {
           final profile = profileSnapshot.data!;
 
           accountName = profile.name.isNotEmpty
@@ -665,8 +764,6 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 20),
               ProfileCard(student: student),
               const SizedBox(height: 24),
-
-              // Informasi mahasiswa
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -710,10 +807,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Informasi akun dari Supabase
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -728,7 +822,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       if (profileSnapshot.connectionState ==
                           ConnectionState.waiting)
                         const Center(
@@ -761,6 +854,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                         .instance
                                         .getMyProfile();
                                   });
+                                  _loadUserRole();
                                 },
                                 icon: const Icon(Icons.refresh),
                                 label: const Text('Coba Lagi'),
@@ -793,9 +887,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -834,7 +926,9 @@ class _DashboardPageState extends State<DashboardPage> {
             width: 105,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           Expanded(child: Text(value)),
@@ -856,7 +950,8 @@ class ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = student['name']?.toString() ?? studentName;
     final nim = student['nim']?.toString() ?? studentId;
-    final semester = student['semester']?.toString() ?? 'Semester 5';
+    final semester =
+        student['semester']?.toString() ?? 'Semester 5';
 
     return Card(
       elevation: 3,
@@ -891,7 +986,9 @@ class ProfileCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     semester,
-                    style: TextStyle(color: Colors.blue.shade800),
+                    style: TextStyle(
+                      color: Colors.blue.shade800,
+                    ),
                   ),
                 ],
               ),
@@ -960,7 +1057,8 @@ class ProfileFormPage extends StatefulWidget {
 class _ProfileFormPageState extends State<ProfileFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final nameController = TextEditingController(text: studentName);
+  final nameController =
+      TextEditingController(text: studentName);
   final emailController = TextEditingController();
   final addressController = TextEditingController();
 
@@ -987,7 +1085,8 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
       return 'Email tidak boleh kosong';
     }
 
-    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    final emailPattern =
+        RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
     if (!emailPattern.hasMatch(value.trim())) {
       return 'Masukkan email yang valid';
@@ -1010,7 +1109,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Konfirmasi'),
-          content: const Text('Apakah data profil ingin disimpan?'),
+          content: const Text(
+            'Apakah data profil ingin disimpan?',
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -1046,7 +1147,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data berhasil disimpan')),
+      const SnackBar(
+        content: Text('Data berhasil disimpan'),
+      ),
     );
   }
 
@@ -1097,7 +1200,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
               const SizedBox(height: 20),
               const Text(
                 'Nama',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -1112,7 +1217,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
               const SizedBox(height: 16),
               const Text(
                 'Email',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -1128,7 +1235,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
               const SizedBox(height: 16),
               const Text(
                 'Alamat',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -1155,7 +1264,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                 'Teknologi Rekayasa Perangkat Lunak',
               ),
               const SizedBox(height: 12),
-              const Text('Universitas Pendidikan Ganesha'),
+              const Text(
+                'Universitas Pendidikan Ganesha',
+              ),
               const SizedBox(height: 12),
               const Text('Semester: 5'),
               const SizedBox(height: 20),
@@ -1165,7 +1276,8 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   onPressed: isLoading ? null : saveForm,
                   child: isLoading
                       ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
                           children: [
                             SizedBox(
                               width: 20,
