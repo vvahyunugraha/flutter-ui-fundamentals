@@ -9,6 +9,7 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
 import '../pages/course_form_page.dart';
@@ -58,6 +59,8 @@ class _DashboardPageState extends State<DashboardPage> {
     profileFuture = ProfileService.instance.getMyProfile();
 
     _loadUserRole();
+
+     NotificationService.instance.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
